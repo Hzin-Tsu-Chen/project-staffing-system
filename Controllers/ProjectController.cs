@@ -31,27 +31,50 @@ public class ProjectController : ControllerBase
         return (int)Math.Round((today - start.Date).TotalDays / total * 100);
     }
 
-    /// <summary>查全部專案，並帶出各專案的派工人數與總工時（關聯彙總查詢）</summary>
+    /// <summary>
+    /// 判斷某工作階段相對於今日的狀態。已完成的專案，其所有階段一律視為已完成。
+    /// </summary>
+    private static string PhaseState(ProjectPhase ph, string projectStatus)
+    {
+        if (projectStatus == "已完成") return "done";
+        var today = DateTime.UtcNow.Date;
+        if (today > ph.EndDate.Date) return "done";
+        if (today >= ph.StartDate.Date) return "now";   // 專案目前正在跑這個階段
+        return "todo";
+    }
+
+    /// <summary>查全部專案，並帶出派工人數、總工時與工作階段（甘特圖用）</summary>
     [HttpGet]
     public async Task<ActionResult> GetAll()
     {
         var projects = await _db.Projects
-            .Select(p => new
-            {
-                p.Id, p.Name, p.Client, p.Status, p.Budget, p.StartDate, p.EndDate,
-                StaffCount = p.Assignments.Count,                          // 派工人數
-                TotalHours = p.Assignments.Sum(a => (int?)a.Hours) ?? 0,   // 總投入工時
-            })
+            .Include(p => p.Phases)
+            .Include(p => p.Assignments)
             .OrderByDescending(p => p.Id)
             .ToListAsync();
 
-        // 進度需依當前日期計算，故在記憶體端處理
-        var result = projects.Select(p => new
+        // 進度與階段狀態需依「今日」計算，故在記憶體端處理
+        var result = projects.Select(p =>
         {
-            p.Id, p.Name, p.Client, p.Status, p.Budget, p.StartDate, p.EndDate,
-            p.StaffCount, p.TotalHours,
-            Progress = TimeProgress(p.StartDate, p.EndDate, p.Status),
-            DurationDays = (int)(p.EndDate.Date - p.StartDate.Date).TotalDays,
+            var phases = p.Phases.OrderBy(ph => ph.Seq)
+                .Select(ph => new
+                {
+                    ph.Seq, ph.Name, ph.StartDate, ph.EndDate,
+                    State = PhaseState(ph, p.Status),
+                }).ToList();
+
+            return new
+            {
+                p.Id, p.Name, p.Client, p.Status, p.Budget, p.StartDate, p.EndDate,
+                StaffCount = p.Assignments.Count,
+                TotalHours = p.Assignments.Sum(a => a.Hours),
+                Progress = TimeProgress(p.StartDate, p.EndDate, p.Status),
+                Phases = phases,
+                // 目前跑到哪一個階段 —— 甘特圖上光看一條線看不出來，故明確標示
+                CurrentPhase = phases.FirstOrDefault(ph => ph.State == "now")?.Name
+                               ?? (p.Status == "已完成" ? "已結案"
+                                   : phases.All(ph => ph.State == "todo") ? "尚未開案" : "階段間空檔"),
+            };
         });
 
         return Ok(result);
@@ -83,12 +106,26 @@ public class ProjectController : ControllerBase
 
         if (project is null) return NotFound();
 
+        var phases = await _db.ProjectPhases
+            .Where(ph => ph.ProjectId == id)
+            .OrderBy(ph => ph.Seq)
+            .ToListAsync();
+
+        var phaseList = phases.Select(ph => new
+        {
+            ph.Seq, ph.Name, ph.StartDate, ph.EndDate,
+            State = PhaseState(ph, project.Status),
+        }).ToList();
+
         return Ok(new
         {
             project.Id, project.Name, project.Client, project.Status, project.Budget,
             project.StartDate, project.EndDate, project.Members,
             Progress = TimeProgress(project.StartDate, project.EndDate, project.Status),
             TotalHours = project.Members.Sum(m => m.Hours),
+            Phases = phaseList,
+            CurrentPhase = phaseList.FirstOrDefault(ph => ph.State == "now")?.Name
+                           ?? (project.Status == "已完成" ? "已結案" : "尚未開案"),
         });
     }
 

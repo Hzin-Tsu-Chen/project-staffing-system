@@ -56,15 +56,42 @@
   tr.sel{background:#eaf2fa}
 
   /* 甘特圖 */
-  .gantt{font-size:12px}
-  .g-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f7f7f7}
-  .g-name{width:190px;flex-shrink:0;font-weight:600;color:#2c3e50;font-size:12.5px}
-  .g-track{flex:1;position:relative;height:22px;background:#f2f4f6;border-radius:4px;min-width:120px}
-  .g-bar{position:absolute;top:0;height:22px;border-radius:4px;background:#cfe0ef;overflow:hidden}
-  .g-fill{height:100%;background:#1a3a5c;border-radius:4px 0 0 4px}
-  .g-pct{position:absolute;right:6px;top:0;line-height:22px;font-size:10.5px;color:#1a3a5c;font-weight:700}
-  .g-today{position:absolute;top:-4px;bottom:-4px;width:2px;background:#c0392b;z-index:2}
-  .g-axis{display:flex;margin-left:200px;font-size:10px;color:#95a5a6;padding-top:5px;justify-content:space-between}
+  .gantt{font-size:12px;overflow-x:auto}
+  .g-inner{min-width:760px}
+  .g-row{display:flex;align-items:stretch;gap:10px;padding:8px 0;border-bottom:1px solid #f4f6f8}
+  .g-name{width:180px;flex-shrink:0;font-weight:600;color:#2c3e50;font-size:12.5px;align-self:center}
+  .g-name small{display:block;font-weight:400;color:#95a5a6;font-size:10.5px}
+  .g-track{flex:1;position:relative;height:30px;background:#f4f6f8;border-radius:4px;min-width:200px}
+  .g-now{width:118px;flex-shrink:0;align-self:center;font-size:11px}
+
+  /* 時間軸表頭 */
+  .g-head{display:flex;gap:10px;align-items:flex-end;border-bottom:2px solid #dde3e9;padding-bottom:4px;margin-bottom:2px}
+  .g-head .g-track{background:none;height:auto;min-height:20px}
+  .g-tick{position:absolute;bottom:0;font-size:10px;color:#7f8c8d;border-left:1px solid #e3e8ec;padding-left:3px;height:16px;white-space:nowrap}
+  .g-tick.y{color:#1a3a5c;font-weight:700;border-left-color:#b9c6d1}
+
+  /* 階段區塊 */
+  .g-seg{position:absolute;top:0;height:30px;border-right:1px solid #fff;display:flex;align-items:center;
+         justify-content:center;overflow:hidden;font-size:10px;white-space:nowrap;padding:0 3px;cursor:default}
+  .g-seg.todo{background:#e4e8ec;color:#8b98a5}
+  .g-seg.done{background:#bcd5ea;color:#2b567f}
+  .g-seg.now{background:#1a3a5c;color:#fff;font-weight:700;box-shadow:0 0 0 2px #f0ad4e}
+  .g-seg:first-child{border-radius:4px 0 0 4px}
+  .g-seg:last-child{border-radius:0 4px 4px 0;border-right:none}
+  .g-today{position:absolute;top:-5px;bottom:-5px;width:2px;background:#c0392b;z-index:3}
+  .g-today::after{content:'今日';position:absolute;top:-13px;left:-11px;font-size:9px;color:#c0392b;font-weight:700;background:#fff;padding:0 2px}
+  .chip{display:inline-block;padding:3px 8px;border-radius:10px;font-size:10.5px;font-weight:700;background:#eef3f8;color:#1a3a5c}
+  .chip.hot{background:#fff3e0;color:#e65100}
+  .chip.fin{background:#e8f5e9;color:#2e7d32}
+
+  /* 詳情裡的階段清單 */
+  .ph-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #f5f7f9;font-size:12.5px}
+  .ph-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .ph-row.done .ph-dot{background:#3d7ab8}
+  .ph-row.now  .ph-dot{background:#1a3a5c;box-shadow:0 0 0 3px #ffe0b2}
+  .ph-row.todo .ph-dot{background:#d4dae0}
+  .ph-row.now{background:#fffaf2;font-weight:700}
+  .ph-row .ph-d{margin-left:auto;color:#95a5a6;font-size:11px}
 
   /* 專案詳情 */
   .p-head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:12px;margin-bottom:12px;border-bottom:2px solid #eef2f5}
@@ -136,6 +163,23 @@
       <!-- 專案管理 -->
       <div id="proj" class="view hide">
         <div class="card">
+          <h2>📅 專案時程甘特圖</h2>
+          <div class="hint">
+            每個專案的橫條依<b>工作階段</b>切成區塊：<span style="color:#7f8c8d">灰＝未開始</span>、<span style="color:#1a3a5c;font-weight:700">深藍＝進行中的階段</span>、<span style="color:#3d7ab8">淺藍＝已完成</span>，<span style="color:#c0392b;font-weight:700">紅線＝今日</span>。<br>
+            階段劃分參考行政院公共工程委員會「機關委託技術服務廠商評選及計費辦法」第 4~9 條之技術服務類型（可行性研究／規劃／設計／監造／專案管理），再依各案性質細分。點任一列可看專案詳情。
+          </div>
+          <div id="gantt" class="gantt"></div>
+        </div>
+        <div class="card">
+          <h2>📁 專案列表</h2>
+          <div class="hint">點選任一列可展開專案詳情（工作階段、成員、負責工作項目、聯絡方式）。</div>
+          <div style="overflow-x:auto">
+          <table><thead><tr><th>ID</th><th>專案名稱</th><th>業主</th><th>狀態</th><th>目前階段</th><th>預算</th><th>進度</th><th>人力</th><th>操作</th></tr></thead>
+            <tbody id="projList"></tbody></table>
+          </div>
+        </div>
+        <div id="projDetail" class="card hide"></div>
+        <div class="card">
           <h2 id="projTitle">➕ 新增專案</h2>
           <div class="row">
             <div><label>專案名稱</label><input id="pName" placeholder="例：台61線橋梁耐震評估"></div>
@@ -152,18 +196,6 @@
           <button class="btn" onclick="saveProject()">儲存</button>
           <button id="pCancel" class="btn btn-ghost hide" onclick="resetProject()">取消</button>
         </div>
-        <div class="card">
-          <h2>📅 專案時程甘特圖</h2>
-          <div class="hint">紅線為今日。深色為已完成的時程比例（依起訖日與今日計算；已完成專案為 100%）。點選任一列可查看該專案詳情。</div>
-          <div id="gantt" class="gantt"></div>
-        </div>
-        <div class="card">
-          <h2>📁 專案列表</h2>
-          <div class="hint">點選任一列可展開專案詳情（成員、負責工作項目、聯絡方式）。</div>
-          <table><thead><tr><th>ID</th><th>專案名稱</th><th>業主</th><th>狀態</th><th>預算</th><th>進度</th><th>人力</th><th>操作</th></tr></thead>
-            <tbody id="projList"></tbody></table>
-        </div>
-        <div id="projDetail" class="card hide"></div>
       </div>
 
       <!-- 人力配置 -->
@@ -299,6 +331,7 @@
         <td style="color:#1a3a5c;font-weight:600">${p.name}</td>
         <td>${p.client}</td>
         <td><span class="badge ${badge(p.status)}">${p.status}</span></td>
+        <td><span class="chip ${p.status === '已完成' ? 'fin' : (p.currentPhase === '尚未開案' ? '' : 'hot')}">${p.currentPhase}</span></td>
         <td>${money(p.budget)}</td>
         <td><div class="bar" style="display:inline-block;width:56px;vertical-align:middle"><span style="width:${p.progress}%"></span></div> ${p.progress}%</td>
         <td>${p.staffCount} 人 / ${p.totalHours} 時</td>
@@ -311,40 +344,62 @@
     if (selectedId) viewProject(selectedId);
   }
 
-  // 甘特圖：把所有專案的起訖日投影到同一條時間軸上
+  // 甘特圖：所有專案投影到同一條時間軸；每個專案再依「工作階段」切成區塊，
+  // 這樣才看得出專案目前具體跑到哪一個階段，而不只是一條線。
   function renderGantt() {
     if (!projects.length) { $('gantt').innerHTML = '<div style="color:#999;font-size:13px">尚無專案</div>'; return; }
 
-    const starts = projects.map(p => new Date(p.startDate));
-    const ends = projects.map(p => new Date(p.endDate));
-    const min = new Date(Math.min(...starts));
-    const max = new Date(Math.max(...ends));
+    const min = new Date(Math.min(...projects.map(p => new Date(p.startDate))));
+    const max = new Date(Math.max(...projects.map(p => new Date(p.endDate))));
     const span = max - min;
     const pos = d => (new Date(d) - min) / span * 100;   // 日期 → 軸上的百分比位置
 
     const today = new Date();
-    const todayPct = Math.min(100, Math.max(0, pos(today)));
     const inRange = today >= min && today <= max;
+    const todayMark = inRange ? `<div class="g-today" style="left:${pos(today)}%"></div>` : '';
+
+    // ── 表頭：以「季」為刻度的時間軸 ──
+    let ticks = '';
+    const t = new Date(min.getFullYear(), Math.floor(min.getMonth() / 3) * 3, 1);
+    while (t <= max) {
+      if (t >= min) {
+        const q = Math.floor(t.getMonth() / 3) + 1;
+        const isYearStart = q === 1;
+        ticks += `<div class="g-tick ${isYearStart ? 'y' : ''}" style="left:${pos(t)}%">${
+          isYearStart ? t.getFullYear() + ' Q1' : 'Q' + q}</div>`;
+      }
+      t.setMonth(t.getMonth() + 3);
+    }
+
+    const head = `
+      <div class="g-head">
+        <div class="g-name" style="color:#7f8c8d;font-size:11px">專案 / 工期</div>
+        <div class="g-track">${ticks}</div>
+        <div class="g-now" style="color:#7f8c8d;font-size:11px">目前階段</div>
+      </div>`;
 
     // 依開始日排序，甘特圖才有階梯感
     const rows = [...projects].sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
-    $('gantt').innerHTML = rows.map(p => {
-      const left = pos(p.startDate);
-      const width = Math.max(1.5, pos(p.endDate) - left);
+    const body = rows.map(p => {
+      const segs = (p.phases || []).map(ph => {
+        const left = pos(ph.startDate);
+        const width = Math.max(0.6, pos(ph.endDate) - left);
+        const label = width > 6 ? ph.name : '';     // 太窄就不塞字，改用 tooltip
+        return `<div class="g-seg ${ph.state}" style="left:${left}%;width:${width}%"
+                  title="${ph.seq}. ${ph.name}｜${fmtDate(ph.startDate)} ~ ${fmtDate(ph.endDate)}">${label}</div>`;
+      }).join('');
+
+      const cls = p.status === '已完成' ? 'fin' : (p.currentPhase === '尚未開案' ? '' : 'hot');
       return `
       <div class="g-row click" onclick="viewProject(${p.id})">
-        <div class="g-name">${p.name}<div style="font-weight:400;color:#95a5a6;font-size:10.5px">${fmtDate(p.startDate)} ~ ${fmtDate(p.endDate)}</div></div>
-        <div class="g-track">
-          <div class="g-bar" style="left:${left}%;width:${width}%">
-            <div class="g-fill" style="width:${p.progress}%"></div>
-            <span class="g-pct">${p.progress}%</span>
-          </div>
-          ${inRange ? `<div class="g-today" style="left:${todayPct}%" title="今天"></div>` : ''}
-        </div>
+        <div class="g-name">${p.name}<small>${fmtDate(p.startDate)} ~ ${fmtDate(p.endDate)}　${p.progress}%</small></div>
+        <div class="g-track">${segs}${todayMark}</div>
+        <div class="g-now"><span class="chip ${cls}">${p.currentPhase}</span></div>
       </div>`;
-    }).join('') +
-    `<div class="g-axis"><span>${fmtDate(min.toISOString())}</span><span>${fmtDate(max.toISOString())}</span></div>`;
+    }).join('');
+
+    $('gantt').innerHTML = `<div class="g-inner">${head}${body}</div>`;
   }
 
   async function viewProject(id) {
@@ -386,10 +441,21 @@
         <div><div class="k">預算</div><div class="v">${money(p.budget)}</div></div>
         <div><div class="k">工期</div><div class="v" style="font-size:12.5px">${fmtDate(p.startDate)} ~ ${fmtDate(p.endDate)}</div></div>
         <div><div class="k">時程進度</div><div class="v">${p.progress}%</div></div>
+        <div><div class="k">目前階段</div><div class="v" style="font-size:12.5px">${p.currentPhase}</div></div>
         <div><div class="k">投入人數</div><div class="v">${p.members.length} 人</div></div>
         <div><div class="k">總工時</div><div class="v">${p.totalHours} 時／月</div></div>
       </div>
       <div class="bar" style="height:10px;margin-bottom:18px"><span style="width:${p.progress}%"></span></div>
+
+      <h2>🧭 工作階段（${p.phases.length} 階段）</h2>
+      <div style="margin-bottom:18px">${p.phases.map(ph => `
+        <div class="ph-row ${ph.state}">
+          <span class="ph-dot"></span>
+          <span>${ph.seq}. ${ph.name}</span>
+          <span class="ph-d">${fmtDate(ph.startDate)} ~ ${fmtDate(ph.endDate)}
+            ${ph.state === 'now' ? '　<b style="color:#e65100">◀ 進行中</b>' : ph.state === 'done' ? '　✓' : ''}</span>
+        </div>`).join('')}</div>
+
       <h2>👥 專案成員與分工（${p.members.length} 人）</h2>
       ${members}`;
     $('projDetail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });

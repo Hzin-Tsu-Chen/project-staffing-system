@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<Project> Projects { get; set; }
     public DbSet<Staff> Staffs { get; set; }
     public DbSet<Assignment> Assignments { get; set; }
+    public DbSet<ProjectPhase> ProjectPhases { get; set; }
     public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder b)
@@ -30,6 +31,13 @@ public class AppDbContext : DbContext
             .HasOne(a => a.Staff)
             .WithMany(s => s.Assignments)
             .HasForeignKey(a => a.StaffId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // 刪除專案時，一併刪除其工作階段
+        b.Entity<ProjectPhase>()
+            .HasOne(ph => ph.Project)
+            .WithMany(p => p.Phases)
+            .HasForeignKey(ph => ph.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // 同一人在同一專案不可重複派工（唯一約束）

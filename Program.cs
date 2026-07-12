@@ -119,6 +119,43 @@ using (var scope = app.Services.CreateScope())
             new Assignment { ProjectId = projects[3].Id, StaffId = staffs[2].Id, RoleInProject = "港區設施 3D 模型整合", Hours = 65 },
             new Assignment { ProjectId = projects[3].Id, StaffId = staffs[0].Id, RoleInProject = "專案結案與成果驗收", Hours = 30 }
         );
+
+        // 工作階段：甘特圖的分段依據。
+        // 階段劃分依「機關委託技術服務廠商評選及計費辦法」第 4~9 條的技術服務類型
+        // （可行性研究／規劃／設計／監造／專案管理），再依各案性質細分。
+        void Phase(int pid, int seq, string name, DateTime s, DateTime e) =>
+            db.ProjectPhases.Add(new ProjectPhase { ProjectId = pid, Seq = seq, Name = name, StartDate = s, EndDate = e });
+
+        // ① 台61線橋梁耐震評估（2026/1/15 ~ 2026/12/31）—— 規劃 + 設計
+        Phase(projects[0].Id, 1, "開案與資料蒐集",     new(2026, 1, 15), new(2026, 3, 15));
+        Phase(projects[0].Id, 2, "現地調查與檢測",     new(2026, 3, 16), new(2026, 5, 31));
+        Phase(projects[0].Id, 3, "耐震能力詳細評估",   new(2026, 6, 1),  new(2026, 8, 31));
+        Phase(projects[0].Id, 4, "補強方案基本設計",   new(2026, 9, 1),  new(2026, 10, 31));
+        Phase(projects[0].Id, 5, "細部設計與成本估算", new(2026, 11, 1), new(2026, 12, 15));
+        Phase(projects[0].Id, 6, "期末審查與結案",     new(2026, 12, 16), new(2026, 12, 31));
+
+        // ② 桃園捷運綠線BIM建模（2025/9/1 ~ 2027/3/31）
+        Phase(projects[1].Id, 1, "開案與需求訪談",     new(2025, 9, 1),  new(2025, 11, 30));
+        Phase(projects[1].Id, 2, "BIM執行計畫書研擬",  new(2025, 12, 1), new(2026, 2, 28));
+        Phase(projects[1].Id, 3, "既有圖說數化與建模", new(2026, 3, 1),  new(2026, 9, 30));
+        Phase(projects[1].Id, 4, "模型整合與碰撞檢核", new(2026, 10, 1), new(2027, 1, 15));
+        Phase(projects[1].Id, 5, "施工圖說產出",       new(2027, 1, 16), new(2027, 2, 28));
+        Phase(projects[1].Id, 6, "成果交付與教育訓練", new(2027, 3, 1),  new(2027, 3, 31));
+
+        // ③ 彰化縣淹水潛勢圖資更新（2026/8/1 ~ 2027/1/31）
+        Phase(projects[2].Id, 1, "開案與資料蒐集",     new(2026, 8, 1),  new(2026, 9, 15));
+        Phase(projects[2].Id, 2, "地形測量與補測",     new(2026, 9, 16), new(2026, 10, 31));
+        Phase(projects[2].Id, 3, "水理模式建置與校正", new(2026, 11, 1), new(2026, 12, 15));
+        Phase(projects[2].Id, 4, "淹水潛勢模擬分析",   new(2026, 12, 16), new(2027, 1, 15));
+        Phase(projects[2].Id, 5, "圖資製作與成果審查", new(2027, 1, 16), new(2027, 1, 31));
+
+        // ④ 台中港區地理資訊系統建置（2025/3/1 ~ 2026/2/28，已完成）
+        Phase(projects[3].Id, 1, "需求訪談與系統規劃", new(2025, 3, 1),  new(2025, 5, 31));
+        Phase(projects[3].Id, 2, "圖資整理與資料庫建置", new(2025, 6, 1), new(2025, 9, 30));
+        Phase(projects[3].Id, 3, "圖臺系統開發",       new(2025, 10, 1), new(2025, 12, 31));
+        Phase(projects[3].Id, 4, "系統測試與上線",     new(2026, 1, 1),  new(2026, 1, 31));
+        Phase(projects[3].Id, 5, "教育訓練與驗收結案", new(2026, 2, 1),  new(2026, 2, 28));
+
         db.SaveChanges();
     }
 }

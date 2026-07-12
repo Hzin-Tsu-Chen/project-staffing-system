@@ -16,6 +16,29 @@ public class Project
     // 一對多：一個專案有多筆派工
     [JsonIgnore]
     public List<Assignment> Assignments { get; set; } = new();
+
+    // 一對多：一個專案有多個工作階段
+    [JsonIgnore]
+    public List<ProjectPhase> Phases { get; set; } = new();
+}
+
+/// <summary>
+/// 專案工作階段（甘特圖的分段依據）。
+/// 階段劃分參考「機關委託技術服務廠商評選及計費辦法」第 4~9 條所定之技術服務類型
+/// （可行性研究／規劃／設計／監造／專案管理），並依各案性質細分。
+/// </summary>
+public class ProjectPhase
+{
+    public int Id { get; set; }
+
+    public int ProjectId { get; set; }              // 外鍵 → Project
+    [JsonIgnore]
+    public Project? Project { get; set; }
+
+    public int Seq { get; set; }                    // 階段順序
+    public string Name { get; set; } = "";          // 階段名稱（如：細部設計）
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
 }
 
 /// <summary>人員</summary>
