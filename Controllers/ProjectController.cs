@@ -59,7 +59,7 @@ public class ProjectController : ControllerBase
             var phases = p.Phases.OrderBy(ph => ph.Seq)
                 .Select(ph => new
                 {
-                    ph.Seq, ph.Name, ph.StartDate, ph.EndDate,
+                    ph.Seq, ph.Name, ph.Note, ph.StartDate, ph.EndDate,
                     State = PhaseState(ph, p.Status),
                 }).ToList();
 
@@ -113,7 +113,7 @@ public class ProjectController : ControllerBase
 
         var phaseList = phases.Select(ph => new
         {
-            ph.Seq, ph.Name, ph.StartDate, ph.EndDate,
+            ph.Seq, ph.Name, ph.Note, ph.StartDate, ph.EndDate,
             State = PhaseState(ph, project.Status),
         }).ToList();
 

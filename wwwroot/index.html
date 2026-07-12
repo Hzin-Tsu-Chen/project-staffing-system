@@ -79,19 +79,28 @@
   .g-seg:first-child{border-radius:4px 0 0 4px}
   .g-seg:last-child{border-radius:0 4px 4px 0;border-right:none}
   .g-today{position:absolute;top:-5px;bottom:-5px;width:2px;background:#c0392b;z-index:3}
-  .g-today::after{content:'今日';position:absolute;top:-13px;left:-11px;font-size:9px;color:#c0392b;font-weight:700;background:#fff;padding:0 2px}
+  /* 今日的文字標籤只在表頭出現一次，各列僅畫線 */
+  .g-today.lbl{top:auto;bottom:-4px;height:14px}
+  .g-today.lbl::after{content:'今日';position:absolute;top:-14px;left:-11px;font-size:10px;color:#c0392b;font-weight:700;background:#fff;padding:0 2px}
   .chip{display:inline-block;padding:3px 8px;border-radius:10px;font-size:10.5px;font-weight:700;background:#eef3f8;color:#1a3a5c}
   .chip.hot{background:#fff3e0;color:#e65100}
   .chip.fin{background:#e8f5e9;color:#2e7d32}
 
   /* 詳情裡的階段清單 */
-  .ph-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #f5f7f9;font-size:12.5px}
-  .ph-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .ph-row{display:flex;align-items:flex-start;gap:10px;padding:10px 8px;border-bottom:1px solid #f5f7f9;font-size:12.5px}
+  .ph-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px}
   .ph-row.done .ph-dot{background:#3d7ab8}
   .ph-row.now  .ph-dot{background:#1a3a5c;box-shadow:0 0 0 3px #ffe0b2}
   .ph-row.todo .ph-dot{background:#d4dae0}
-  .ph-row.now{background:#fffaf2;font-weight:700}
-  .ph-row .ph-d{margin-left:auto;color:#95a5a6;font-size:11px}
+  .ph-row.now{background:#fffaf2;border-radius:6px}
+  .ph-row.todo{color:#95a5a6}
+  .ph-body{flex:1;min-width:0}
+  .ph-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:700;color:#2c3e50}
+  .ph-row.todo .ph-head{font-weight:600;color:#8b98a5}
+  .ph-head .ph-d{font-weight:400;color:#95a5a6;font-size:11px;white-space:nowrap}
+  /* 白話說明：讓非工程背景的人也看得懂這階段在做什麼 */
+  .ph-note{margin-top:3px;font-size:12px;line-height:1.7;color:#7f8c8d;font-weight:400}
+  .ph-row.now .ph-note{color:#5d6d7e}
 
   /* 專案詳情 */
   .p-head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:12px;margin-bottom:12px;border-bottom:2px solid #eef2f5}
@@ -356,7 +365,9 @@
 
     const today = new Date();
     const inRange = today >= min && today <= max;
+    // 今日線每一列都要畫（否則對不到那一列），但文字標籤只在表頭標一次
     const todayMark = inRange ? `<div class="g-today" style="left:${pos(today)}%"></div>` : '';
+    const todayLabel = inRange ? `<div class="g-today lbl" style="left:${pos(today)}%"></div>` : '';
 
     // ── 表頭：以「季」為刻度的時間軸 ──
     let ticks = '';
@@ -374,7 +385,7 @@
     const head = `
       <div class="g-head">
         <div class="g-name" style="color:#7f8c8d;font-size:11px">專案 / 工期</div>
-        <div class="g-track">${ticks}</div>
+        <div class="g-track">${ticks}${todayLabel}</div>
         <div class="g-now" style="color:#7f8c8d;font-size:11px">目前階段</div>
       </div>`;
 
@@ -387,7 +398,7 @@
         const width = Math.max(0.6, pos(ph.endDate) - left);
         const label = width > 6 ? ph.name : '';     // 太窄就不塞字，改用 tooltip
         return `<div class="g-seg ${ph.state}" style="left:${left}%;width:${width}%"
-                  title="${ph.seq}. ${ph.name}｜${fmtDate(ph.startDate)} ~ ${fmtDate(ph.endDate)}">${label}</div>`;
+                  title="${ph.seq}. ${ph.name}（${fmtDate(ph.startDate)} ~ ${fmtDate(ph.endDate)}）&#10;&#10;${ph.note}">${label}</div>`;
       }).join('');
 
       const cls = p.status === '已完成' ? 'fin' : (p.currentPhase === '尚未開案' ? '' : 'hot');
@@ -451,9 +462,14 @@
       <div style="margin-bottom:18px">${p.phases.map(ph => `
         <div class="ph-row ${ph.state}">
           <span class="ph-dot"></span>
-          <span>${ph.seq}. ${ph.name}</span>
-          <span class="ph-d">${fmtDate(ph.startDate)} ~ ${fmtDate(ph.endDate)}
-            ${ph.state === 'now' ? '　<b style="color:#e65100">◀ 進行中</b>' : ph.state === 'done' ? '　✓' : ''}</span>
+          <div class="ph-body">
+            <div class="ph-head">
+              <span>${ph.seq}. ${ph.name}</span>
+              <span class="ph-d">${fmtDate(ph.startDate)} ~ ${fmtDate(ph.endDate)}
+                ${ph.state === 'now' ? '　<b style="color:#e65100">◀ 進行中</b>' : ph.state === 'done' ? '　✓ 已完成' : ''}</span>
+            </div>
+            <div class="ph-note">${ph.note}</div>
+          </div>
         </div>`).join('')}</div>
 
       <h2>👥 專案成員與分工（${p.members.length} 人）</h2>

@@ -37,6 +37,7 @@ public class ProjectPhase
 
     public int Seq { get; set; }                    // 階段順序
     public string Name { get; set; } = "";          // 階段名稱（如：細部設計）
+    public string Note { get; set; } = "";          // 白話說明：這個階段實際在做什麼
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
 }
