@@ -27,16 +27,14 @@ var connectionString = builder.Configuration.GetConnectionString("Default")
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
 
 // ── JWT 驗證 ──
-// 註：HMAC-SHA512 要求金鑰至少 512 bits（64 字元）
-var jwtKey = builder.Configuration["Jwt:Key"]
-             ?? "dev-only-secret-key-please-change-in-production-at-least-64-characters-long!!";
+// 簽發（AuthService）與驗證（此處）必須使用同一把金鑰，故共用 BuildSigningKey
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            IssuerSigningKey = AuthService.BuildSigningKey(builder.Configuration),
             ValidateIssuer = false,
             ValidateAudience = false,
         };

@@ -12,14 +12,26 @@ namespace MyApi.Services;
 /// </summary>
 public class AuthService
 {
-    private readonly string _jwtKey;
+    private readonly SymmetricSecurityKey _signingKey;
 
     public AuthService(IConfiguration config)
     {
-        // JWT 簽章金鑰從設定讀取（正式環境放環境變數，不寫死在程式碼）
-        // 註：HMAC-SHA512 要求金鑰至少 512 bits（64 字元），太短會拋 IDX10720
-        _jwtKey = config["Jwt:Key"]
-                  ?? "dev-only-secret-key-please-change-in-production-at-least-64-characters-long!!";
+        _signingKey = BuildSigningKey(config);
+    }
+
+    /// <summary>
+    /// 由設定值產生 JWT 簽章金鑰。
+    ///
+    /// HMAC-SHA512 要求金鑰至少 512 bits（64 bytes），但雲端平台自動產生的
+    /// 環境變數長度不一定足夠（長度不足會拋 IDX10720）。
+    /// 故一律以 SHA-512 將設定值雜湊為固定 64 bytes，任何長度的輸入皆可安全使用。
+    /// </summary>
+    public static SymmetricSecurityKey BuildSigningKey(IConfiguration config)
+    {
+        var secret = config["Jwt:Key"]
+                     ?? "dev-only-secret-please-set-Jwt__Key-in-production";
+        var keyBytes = SHA512.HashData(Encoding.UTF8.GetBytes(secret));   // 固定 64 bytes
+        return new SymmetricSecurityKey(keyBytes);
     }
 
     /// <summary>
@@ -50,8 +62,7 @@ public class AuthService
             new Claim(ClaimTypes.Name, user.Username),
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtKey));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+        var creds = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha512Signature);
 
         var token = new JwtSecurityToken(
             claims: claims,
