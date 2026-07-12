@@ -79,27 +79,45 @@ using (var scope = app.Services.CreateScope())
 
         var staffs = new List<Staff>
         {
-            new() { Name = "陳志明", Role = "專案經理", Skill = "橋梁工程、專案管理" },
-            new() { Name = "林佳蓉", Role = "工程師", Skill = "結構分析、耐震評估" },
-            new() { Name = "王大維", Role = "工程師", Skill = "BIM、Revit" },
-            new() { Name = "李思妤", Role = "工程師", Skill = "GIS、空間資料分析" },
-            new() { Name = "張俊傑", Role = "繪圖員", Skill = "AutoCAD、圖資繪製" },
-            new() { Name = "黃美玲", Role = "測量員", Skill = "測量、無人機空拍" },
+            new() { Name = "陳志明", Role = "專案經理", Skill = "橋梁工程、專案管理",
+                    Email = "cm.chen@example-eng.com.tw", Phone = "04-2358-1001" },
+            new() { Name = "林佳蓉", Role = "工程師", Skill = "結構分析、耐震評估",
+                    Email = "jr.lin@example-eng.com.tw", Phone = "04-2358-1002" },
+            new() { Name = "王大維", Role = "工程師", Skill = "BIM、Revit",
+                    Email = "dw.wang@example-eng.com.tw", Phone = "04-2358-1003" },
+            new() { Name = "李思妤", Role = "工程師", Skill = "GIS、空間資料分析",
+                    Email = "sy.lee@example-eng.com.tw", Phone = "04-2358-1004" },
+            new() { Name = "張俊傑", Role = "繪圖員", Skill = "AutoCAD、圖資繪製",
+                    Email = "cc.chang@example-eng.com.tw", Phone = "04-2358-1005" },
+            new() { Name = "黃美玲", Role = "測量員", Skill = "測量、無人機空拍",
+                    Email = "ml.huang@example-eng.com.tw", Phone = "04-2358-1006" },
         };
         db.Staffs.AddRange(staffs);
         db.SaveChanges();
 
-        // 派工：建立專案與人員的多對多關聯（含角色與工時）
+        // 派工：建立專案與人員的多對多關聯（含負責工作項目與工時）
         db.Assignments.AddRange(
-            new Assignment { ProjectId = projects[0].Id, StaffId = staffs[0].Id, RoleInProject = "專案負責人", Hours = 60 },
-            new Assignment { ProjectId = projects[0].Id, StaffId = staffs[1].Id, RoleInProject = "結構分析", Hours = 120 },
-            new Assignment { ProjectId = projects[0].Id, StaffId = staffs[4].Id, RoleInProject = "圖資繪製", Hours = 80 },
-            new Assignment { ProjectId = projects[1].Id, StaffId = staffs[0].Id, RoleInProject = "專案督導", Hours = 40 },
-            new Assignment { ProjectId = projects[1].Id, StaffId = staffs[2].Id, RoleInProject = "BIM 建模", Hours = 150 },
-            new Assignment { ProjectId = projects[1].Id, StaffId = staffs[4].Id, RoleInProject = "施工圖繪製", Hours = 100 },
-            new Assignment { ProjectId = projects[2].Id, StaffId = staffs[3].Id, RoleInProject = "GIS 分析", Hours = 90 },
-            new Assignment { ProjectId = projects[2].Id, StaffId = staffs[5].Id, RoleInProject = "現地測量", Hours = 70 },
-            new Assignment { ProjectId = projects[3].Id, StaffId = staffs[3].Id, RoleInProject = "系統建置", Hours = 60 }
+            // 台61線橋梁耐震評估
+            new Assignment { ProjectId = projects[0].Id, StaffId = staffs[0].Id, RoleInProject = "專案負責人／業主界面協調", Hours = 60 },
+            new Assignment { ProjectId = projects[0].Id, StaffId = staffs[1].Id, RoleInProject = "橋梁結構耐震分析、SAP2000 建模", Hours = 120 },
+            new Assignment { ProjectId = projects[0].Id, StaffId = staffs[4].Id, RoleInProject = "補強設計圖繪製（AutoCAD）", Hours = 80 },
+            new Assignment { ProjectId = projects[0].Id, StaffId = staffs[5].Id, RoleInProject = "橋梁現地檢測與空拍建檔", Hours = 50 },
+
+            // 桃園捷運綠線BIM建模
+            new Assignment { ProjectId = projects[1].Id, StaffId = staffs[0].Id, RoleInProject = "專案督導／進度與預算控管", Hours = 40 },
+            new Assignment { ProjectId = projects[1].Id, StaffId = staffs[2].Id, RoleInProject = "車站 BIM 建模（Revit）、碰撞檢核", Hours = 150 },
+            new Assignment { ProjectId = projects[1].Id, StaffId = staffs[4].Id, RoleInProject = "施工圖出圖與圖說套繪", Hours = 100 },
+            new Assignment { ProjectId = projects[1].Id, StaffId = staffs[3].Id, RoleInProject = "路線周邊地形圖資整合", Hours = 45 },
+
+            // 彰化縣淹水潛勢圖資更新
+            new Assignment { ProjectId = projects[2].Id, StaffId = staffs[3].Id, RoleInProject = "淹水潛勢空間分析（QGIS）", Hours = 90 },
+            new Assignment { ProjectId = projects[2].Id, StaffId = staffs[5].Id, RoleInProject = "現地測量與地形點位補測", Hours = 70 },
+            new Assignment { ProjectId = projects[2].Id, StaffId = staffs[1].Id, RoleInProject = "水理模式參數校正", Hours = 55 },
+
+            // 台中港區地理資訊系統建置
+            new Assignment { ProjectId = projects[3].Id, StaffId = staffs[3].Id, RoleInProject = "GIS 系統建置與圖臺開發", Hours = 60 },
+            new Assignment { ProjectId = projects[3].Id, StaffId = staffs[2].Id, RoleInProject = "港區設施 3D 模型整合", Hours = 65 },
+            new Assignment { ProjectId = projects[3].Id, StaffId = staffs[0].Id, RoleInProject = "專案結案與成果驗收", Hours = 30 }
         );
         db.SaveChanges();
     }

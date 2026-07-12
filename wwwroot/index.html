@@ -49,10 +49,44 @@
   .hint{background:#fff8e6;border-left:4px solid #f0ad4e;padding:9px;border-radius:6px;font-size:12px;color:#6b5b3e;margin-bottom:12px}
   .hide{display:none}
   .member{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:13px}
+
+  /* 專案列表可點擊 */
+  tr.click{cursor:pointer}
+  tr.click:hover{background:#f4f8fc}
+  tr.sel{background:#eaf2fa}
+
+  /* 甘特圖 */
+  .gantt{font-size:12px}
+  .g-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f7f7f7}
+  .g-name{width:190px;flex-shrink:0;font-weight:600;color:#2c3e50;font-size:12.5px}
+  .g-track{flex:1;position:relative;height:22px;background:#f2f4f6;border-radius:4px;min-width:120px}
+  .g-bar{position:absolute;top:0;height:22px;border-radius:4px;background:#cfe0ef;overflow:hidden}
+  .g-fill{height:100%;background:#1a3a5c;border-radius:4px 0 0 4px}
+  .g-pct{position:absolute;right:6px;top:0;line-height:22px;font-size:10.5px;color:#1a3a5c;font-weight:700}
+  .g-today{position:absolute;top:-4px;bottom:-4px;width:2px;background:#c0392b;z-index:2}
+  .g-axis{display:flex;margin-left:200px;font-size:10px;color:#95a5a6;padding-top:5px;justify-content:space-between}
+
+  /* 專案詳情 */
+  .p-head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:12px;margin-bottom:12px;border-bottom:2px solid #eef2f5}
+  .p-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+  .p-meta div{background:#f8fafc;border-radius:6px;padding:8px 10px}
+  .p-meta .k{font-size:11px;color:#95a5a6}
+  .p-meta .v{font-size:14px;font-weight:700;color:#1a3a5c}
+  .m-card{border:1px solid #e8edf2;border-radius:8px;padding:11px 13px;margin-bottom:9px;background:#fff}
+  .m-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+  .m-name{font-weight:700;font-size:14px;color:#1a3a5c}
+  .m-role{font-size:11px;background:#eef3f8;color:#4a6785;padding:2px 8px;border-radius:9px;margin-left:6px}
+  .m-work{font-size:13px;color:#2c3e50;margin:6px 0}
+  .m-work b{color:#7f8c8d;font-weight:600;font-size:11px;display:block}
+  .m-contact{font-size:12px;color:#7f8c8d;display:flex;gap:14px;flex-wrap:wrap}
+  .m-contact a{color:#1a6fa8;text-decoration:none}
+
   @media(max-width:640px){
     .wrap{padding:12px}
     th:nth-child(1),td:nth-child(1){display:none}
     .stat .n{font-size:19px}
+    .g-name{width:110px;font-size:11px}
+    .g-axis{margin-left:120px}
   }
 </style>
 </head>
@@ -119,14 +153,17 @@
           <button id="pCancel" class="btn btn-ghost hide" onclick="resetProject()">取消</button>
         </div>
         <div class="card">
+          <h2>📅 專案時程甘特圖</h2>
+          <div class="hint">紅線為今日。深色為已完成的時程比例（依起訖日與今日計算；已完成專案為 100%）。點選任一列可查看該專案詳情。</div>
+          <div id="gantt" class="gantt"></div>
+        </div>
+        <div class="card">
           <h2>📁 專案列表</h2>
-          <table><thead><tr><th>ID</th><th>專案名稱</th><th>業主</th><th>狀態</th><th>預算</th><th>人力</th><th>操作</th></tr></thead>
+          <div class="hint">點選任一列可展開專案詳情（成員、負責工作項目、聯絡方式）。</div>
+          <table><thead><tr><th>ID</th><th>專案名稱</th><th>業主</th><th>狀態</th><th>預算</th><th>進度</th><th>人力</th><th>操作</th></tr></thead>
             <tbody id="projList"></tbody></table>
         </div>
-        <div id="projDetail" class="card hide">
-          <h2>👥 專案成員</h2>
-          <div id="memberList"></div>
-        </div>
+        <div id="projDetail" class="card hide"></div>
       </div>
 
       <!-- 人力配置 -->
@@ -140,12 +177,16 @@
             </div>
             <div><label>專長</label><input id="sSkill" placeholder="例：GIS、空間資料分析"></div>
           </div>
+          <div class="row">
+            <div><label>Email</label><input id="sEmail" placeholder="例：sy.lee@example-eng.com.tw"></div>
+            <div><label>聯絡電話／分機</label><input id="sPhone" placeholder="例：04-2358-1004"></div>
+          </div>
           <button class="btn" onclick="saveStaff()">儲存</button>
           <button id="sCancel" class="btn btn-ghost hide" onclick="resetStaff()">取消</button>
         </div>
         <div class="card">
           <h2>👷 人員與負荷率</h2>
-          <table><thead><tr><th>ID</th><th>姓名</th><th>職稱</th><th>專長</th><th>專案數</th><th>負荷率</th><th>操作</th></tr></thead>
+          <table><thead><tr><th>ID</th><th>姓名</th><th>職稱</th><th>專長</th><th>聯絡方式</th><th>專案數</th><th>負荷率</th><th>操作</th></tr></thead>
             <tbody id="staffList"></tbody></table>
         </div>
       </div>
@@ -225,7 +266,7 @@
       <div class="stat"><div class="n">${d.totalProjects}</div><div class="l">專案總數</div></div>
       <div class="stat"><div class="n">${d.activeProjects}</div><div class="l">進行中專案</div></div>
       <div class="stat"><div class="n">${d.totalStaff}</div><div class="l">在職人員</div></div>
-      <div class="stat"><div class="n">${d.totalBudget.toLocaleString()} 萬</div><div class="l">專案總預算</div></div>
+      <div class="stat"><div class="n">${money(d.totalBudget)}</div><div class="l">專案總預算</div></div>
       <div class="stat ${d.overloadedCount ? 'warn' : ''}"><div class="n">${d.overloadedCount}</div><div class="l">人力超載人數</div></div>`;
     $('overloadList').innerHTML = d.overloaded.length
       ? d.overloaded.map(o => `<div class="member"><span>${o.name}</span><span style="color:#c0392b;font-weight:600">${o.hours} 小時／月（標準 160）</span></div>`).join('')
@@ -235,30 +276,123 @@
   // ── 專案 ──
   const badge = s => ({ '進行中': 'b-run', '規劃中': 'b-plan', '已完成': 'b-done', '暫停': 'b-stop' })[s] || 'b-stop';
 
+  // 預算以「萬元」為單位存放；超過 1 億時改以「億」顯示，避免出現 22,900 萬這種難讀的數字
+  function money(wan) {
+    if (wan >= 10000) {
+      const yi = wan / 10000;
+      return (yi % 1 === 0 ? yi : yi.toFixed(2)) + ' 億';
+    }
+    return wan.toLocaleString() + ' 萬';
+  }
+
+  const fmtDate = s => s.slice(0, 10);
+  let projects = [];      // 快取專案列表，供甘特圖與詳情共用
+  let selectedId = null;
+
   async function loadProjects() {
     const r = await fetch(API + '/project', { headers: H() });
-    const list = await r.json();
-    $('projList').innerHTML = list.map(p => `
-      <tr>
+    projects = await r.json();
+
+    $('projList').innerHTML = projects.map(p => `
+      <tr class="click" data-id="${p.id}" onclick="viewProject(${p.id})">
         <td>${p.id}</td>
-        <td><a href="#" onclick="viewProject(${p.id});return false" style="color:#1a3a5c;font-weight:600">${p.name}</a></td>
+        <td style="color:#1a3a5c;font-weight:600">${p.name}</td>
         <td>${p.client}</td>
         <td><span class="badge ${badge(p.status)}">${p.status}</span></td>
-        <td>${p.budget.toLocaleString()} 萬</td>
+        <td>${money(p.budget)}</td>
+        <td><div class="bar" style="display:inline-block;width:56px;vertical-align:middle"><span style="width:${p.progress}%"></span></div> ${p.progress}%</td>
         <td>${p.staffCount} 人 / ${p.totalHours} 時</td>
-        <td><button class="btn-sm btn-edit" onclick='editProject(${JSON.stringify(p)})'>編輯</button>
+        <td onclick="event.stopPropagation()">
+            <button class="btn-sm btn-edit" onclick='editProject(${JSON.stringify(p)})'>編輯</button>
             <button class="btn-sm btn-del" onclick="delProject(${p.id})">刪除</button></td>
       </tr>`).join('');
+
+    renderGantt();
+    if (selectedId) viewProject(selectedId);
+  }
+
+  // 甘特圖：把所有專案的起訖日投影到同一條時間軸上
+  function renderGantt() {
+    if (!projects.length) { $('gantt').innerHTML = '<div style="color:#999;font-size:13px">尚無專案</div>'; return; }
+
+    const starts = projects.map(p => new Date(p.startDate));
+    const ends = projects.map(p => new Date(p.endDate));
+    const min = new Date(Math.min(...starts));
+    const max = new Date(Math.max(...ends));
+    const span = max - min;
+    const pos = d => (new Date(d) - min) / span * 100;   // 日期 → 軸上的百分比位置
+
+    const today = new Date();
+    const todayPct = Math.min(100, Math.max(0, pos(today)));
+    const inRange = today >= min && today <= max;
+
+    // 依開始日排序，甘特圖才有階梯感
+    const rows = [...projects].sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+    $('gantt').innerHTML = rows.map(p => {
+      const left = pos(p.startDate);
+      const width = Math.max(1.5, pos(p.endDate) - left);
+      return `
+      <div class="g-row click" onclick="viewProject(${p.id})">
+        <div class="g-name">${p.name}<div style="font-weight:400;color:#95a5a6;font-size:10.5px">${fmtDate(p.startDate)} ~ ${fmtDate(p.endDate)}</div></div>
+        <div class="g-track">
+          <div class="g-bar" style="left:${left}%;width:${width}%">
+            <div class="g-fill" style="width:${p.progress}%"></div>
+            <span class="g-pct">${p.progress}%</span>
+          </div>
+          ${inRange ? `<div class="g-today" style="left:${todayPct}%" title="今天"></div>` : ''}
+        </div>
+      </div>`;
+    }).join('') +
+    `<div class="g-axis"><span>${fmtDate(min.toISOString())}</span><span>${fmtDate(max.toISOString())}</span></div>`;
   }
 
   async function viewProject(id) {
     const r = await fetch(`${API}/project/${id}`, { headers: H() });
+    if (!r.ok) return;
     const p = await r.json();
+    selectedId = id;
+
+    document.querySelectorAll('#projList tr').forEach(tr =>
+      tr.classList.toggle('sel', tr.dataset.id === String(id)));
+
+    const members = p.members.length
+      ? p.members.map(m => `
+        <div class="m-card">
+          <div class="m-top">
+            <div><span class="m-name">${m.staffName}</span><span class="m-role">${m.staffRole}</span></div>
+            <div style="font-size:12px;color:#7f8c8d">投入 <b style="color:#1a3a5c">${m.hours}</b> 小時／月
+              <button class="btn-sm btn-del" style="margin-left:8px" onclick="unassign(${m.id})">移除</button></div>
+          </div>
+          <div class="m-work"><b>主要負責工作項目</b>${m.roleInProject || '—'}</div>
+          <div class="m-contact">
+            <span>✉️ <a href="mailto:${m.staffEmail}">${m.staffEmail || '—'}</a></span>
+            <span>📞 <a href="tel:${m.staffPhone}">${m.staffPhone || '—'}</a></span>
+            <span>🛠️ 專長：${m.staffSkill || '—'}</span>
+          </div>
+        </div>`).join('')
+      : '<div style="color:#999;font-size:13px">尚無派工人員，請至「派工」頁面指派。</div>';
+
     $('projDetail').classList.remove('hide');
-    $('memberList').innerHTML = `<div style="font-weight:600;margin-bottom:8px">${p.name}</div>` + (p.members.length
-      ? p.members.map(m => `<div class="member"><span>${m.staffName}（${m.staffRole}）— ${m.roleInProject}</span>
-          <span>${m.hours} 時 <button class="btn-sm btn-del" onclick="unassign(${m.id})">移除</button></span></div>`).join('')
-      : '<div style="color:#999;font-size:13px">尚無派工人員</div>');
+    $('projDetail').innerHTML = `
+      <div class="p-head">
+        <div>
+          <h2 style="margin-bottom:4px">📁 ${p.name}</h2>
+          <div style="font-size:12px;color:#7f8c8d;padding-left:12px">業主：${p.client}</div>
+        </div>
+        <span class="badge ${badge(p.status)}" style="height:fit-content">${p.status}</span>
+      </div>
+      <div class="p-meta">
+        <div><div class="k">預算</div><div class="v">${money(p.budget)}</div></div>
+        <div><div class="k">工期</div><div class="v" style="font-size:12.5px">${fmtDate(p.startDate)} ~ ${fmtDate(p.endDate)}</div></div>
+        <div><div class="k">時程進度</div><div class="v">${p.progress}%</div></div>
+        <div><div class="k">投入人數</div><div class="v">${p.members.length} 人</div></div>
+        <div><div class="k">總工時</div><div class="v">${p.totalHours} 時／月</div></div>
+      </div>
+      <div class="bar" style="height:10px;margin-bottom:18px"><span style="width:${p.progress}%"></span></div>
+      <h2>👥 專案成員與分工（${p.members.length} 人）</h2>
+      ${members}`;
+    $('projDetail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   async function saveProject() {
@@ -293,7 +427,11 @@
   async function delProject(id) {
     if (!confirm('刪除專案會一併刪除其派工紀錄，確定嗎？')) return;
     const r = await fetch(`${API}/project/${id}`, { method: 'DELETE', headers: H() });
-    if (r.ok) { say('已刪除', true); $('projDetail').classList.add('hide'); loadAll(); }
+    if (r.ok) {
+      say('已刪除', true);
+      if (selectedId === id) { selectedId = null; $('projDetail').classList.add('hide'); }
+      loadAll();
+    }
   }
 
   // ── 人員 ──
@@ -303,6 +441,7 @@
     $('staffList').innerHTML = list.map(s => `
       <tr>
         <td>${s.id}</td><td>${s.name}</td><td>${s.role}</td><td>${s.skill}</td>
+        <td style="font-size:11.5px;color:#7f8c8d">${s.email || '—'}<br>${s.phone || '—'}</td>
         <td>${s.projectCount}</td>
         <td>
           <div style="display:flex;align-items:center;gap:6px">
@@ -316,7 +455,10 @@
   }
 
   async function saveStaff() {
-    const body = JSON.stringify({ name: $('sName').value, role: $('sRole').value, skill: $('sSkill').value, isActive: true });
+    const body = JSON.stringify({
+      name: $('sName').value, role: $('sRole').value, skill: $('sSkill').value,
+      email: $('sEmail').value, phone: $('sPhone').value, isActive: true,
+    });
     const r = editStaffId
       ? await fetch(`${API}/staff/${editStaffId}`, { method: 'PUT', headers: H(), body })
       : await fetch(`${API}/staff`, { method: 'POST', headers: H(), body });
@@ -325,13 +467,14 @@
   function editStaff(s) {
     editStaffId = s.id;
     $('sName').value = s.name; $('sRole').value = s.role; $('sSkill').value = s.skill;
+    $('sEmail').value = s.email || ''; $('sPhone').value = s.phone || '';
     $('staffTitle').textContent = '✏️ 編輯人員 #' + s.id;
     $('sCancel').classList.remove('hide');
     window.scrollTo(0, 0);
   }
   function resetStaff() {
     editStaffId = null;
-    ['sName', 'sSkill'].forEach(i => $(i).value = '');
+    ['sName', 'sSkill', 'sEmail', 'sPhone'].forEach(i => $(i).value = '');
     $('staffTitle').textContent = '➕ 新增人員';
     $('sCancel').classList.add('hide');
   }

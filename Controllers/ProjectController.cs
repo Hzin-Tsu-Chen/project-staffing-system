@@ -14,6 +14,23 @@ public class ProjectController : ControllerBase
     private readonly AppDbContext _db;
     public ProjectController(AppDbContext db) => _db = db;
 
+    /// <summary>
+    /// 依專案起訖日與今日，計算時程進度百分比（供甘特圖使用）。
+    /// 已完成專案一律視為 100%；尚未開始為 0%。
+    /// </summary>
+    private static int TimeProgress(DateTime start, DateTime end, string status)
+    {
+        if (status == "已完成") return 100;
+
+        var today = DateTime.UtcNow.Date;
+        if (today <= start.Date) return 0;
+        if (today >= end.Date) return 100;
+
+        var total = (end.Date - start.Date).TotalDays;
+        if (total <= 0) return 100;
+        return (int)Math.Round((today - start.Date).TotalDays / total * 100);
+    }
+
     /// <summary>查全部專案，並帶出各專案的派工人數與總工時（關聯彙總查詢）</summary>
     [HttpGet]
     public async Task<ActionResult> GetAll()
@@ -22,16 +39,25 @@ public class ProjectController : ControllerBase
             .Select(p => new
             {
                 p.Id, p.Name, p.Client, p.Status, p.Budget, p.StartDate, p.EndDate,
-                StaffCount = p.Assignments.Count,                    // 派工人數
-                TotalHours = p.Assignments.Sum(a => (int?)a.Hours) ?? 0,  // 總投入工時
+                StaffCount = p.Assignments.Count,                          // 派工人數
+                TotalHours = p.Assignments.Sum(a => (int?)a.Hours) ?? 0,   // 總投入工時
             })
             .OrderByDescending(p => p.Id)
             .ToListAsync();
 
-        return Ok(projects);
+        // 進度需依當前日期計算，故在記憶體端處理
+        var result = projects.Select(p => new
+        {
+            p.Id, p.Name, p.Client, p.Status, p.Budget, p.StartDate, p.EndDate,
+            p.StaffCount, p.TotalHours,
+            Progress = TimeProgress(p.StartDate, p.EndDate, p.Status),
+            DurationDays = (int)(p.EndDate.Date - p.StartDate.Date).TotalDays,
+        });
+
+        return Ok(result);
     }
 
-    /// <summary>查單一專案，並列出其所有派工人員（JOIN 查詢）</summary>
+    /// <summary>查單一專案，列出所有派工人員與其聯絡方式（JOIN 查詢）</summary>
     [HttpGet("{id}")]
     public async Task<ActionResult> GetOne(int id)
     {
@@ -46,14 +72,24 @@ public class ProjectController : ControllerBase
                     a.StaffId,
                     StaffName = a.Staff!.Name,
                     StaffRole = a.Staff.Role,
-                    a.RoleInProject,
+                    StaffSkill = a.Staff.Skill,
+                    StaffEmail = a.Staff.Email,      // 聯絡方式
+                    StaffPhone = a.Staff.Phone,
+                    a.RoleInProject,                 // 在此專案負責的工作項目
                     a.Hours,
                 }).ToList(),
             })
             .FirstOrDefaultAsync();
 
         if (project is null) return NotFound();
-        return Ok(project);
+
+        return Ok(new
+        {
+            project.Id, project.Name, project.Client, project.Status, project.Budget,
+            project.StartDate, project.EndDate, project.Members,
+            Progress = TimeProgress(project.StartDate, project.EndDate, project.Status),
+            TotalHours = project.Members.Sum(m => m.Hours),
+        });
     }
 
     [HttpPost]

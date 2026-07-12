@@ -25,6 +25,8 @@ public class Staff
     public string Name { get; set; } = "";
     public string Role { get; set; } = "工程師";     // 工程師 / 專案經理 / 繪圖員 / 測量員
     public string Skill { get; set; } = "";         // 專長（如：結構、GIS、BIM）
+    public string Email { get; set; } = "";         // 聯絡信箱
+    public string Phone { get; set; } = "";         // 分機／手機
     public bool IsActive { get; set; } = true;      // 是否在職
 
     [JsonIgnore]

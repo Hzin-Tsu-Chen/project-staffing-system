@@ -26,7 +26,7 @@ public class StaffController : ControllerBase
         var staff = await _db.Staffs
             .Select(s => new
             {
-                s.Id, s.Name, s.Role, s.Skill, s.IsActive,
+                s.Id, s.Name, s.Role, s.Skill, s.Email, s.Phone, s.IsActive,
                 ProjectCount = s.Assignments.Count,
                 TotalHours = s.Assignments.Sum(a => (int?)a.Hours) ?? 0,
             })
@@ -35,7 +35,7 @@ public class StaffController : ControllerBase
         // 負荷率在記憶體計算（避免資料庫端浮點運算差異）
         var result = staff.Select(s => new
         {
-            s.Id, s.Name, s.Role, s.Skill, s.IsActive, s.ProjectCount, s.TotalHours,
+            s.Id, s.Name, s.Role, s.Skill, s.Email, s.Phone, s.IsActive, s.ProjectCount, s.TotalHours,
             LoadPercent = (int)Math.Round(s.TotalHours * 100.0 / MonthlyCapacity),
             IsOverloaded = s.TotalHours > MonthlyCapacity,
         }).OrderByDescending(s => s.TotalHours);
@@ -60,6 +60,8 @@ public class StaffController : ControllerBase
         s.Name = updated.Name;
         s.Role = updated.Role;
         s.Skill = updated.Skill;
+        s.Email = updated.Email;
+        s.Phone = updated.Phone;
         s.IsActive = updated.IsActive;
         await _db.SaveChangesAsync();
         return Ok(s);
