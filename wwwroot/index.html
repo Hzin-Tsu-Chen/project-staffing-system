@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工程專案派工管理系統</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,"PingFang TC",sans-serif}
+  body{background:#f0f2f5;color:#2c3e50;line-height:1.6}
+  .header{background:#1a3a5c;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  .header h1{font-size:18px}
+  .header .sub{font-size:11px;opacity:.75}
+  .tabs{background:#fff;border-bottom:1px solid #e0e0e0;display:flex;overflow-x:auto}
+  .tab{padding:12px 18px;cursor:pointer;font-size:14px;font-weight:600;color:#7f8c8d;border-bottom:3px solid transparent;white-space:nowrap}
+  .tab.on{color:#1a3a5c;border-bottom-color:#1a3a5c}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px}
+  .card{background:#fff;border-radius:10px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:16px}
+  h2{font-size:15px;color:#1a3a5c;margin-bottom:14px;border-left:4px solid #1a3a5c;padding-left:8px}
+  label{display:block;font-size:12px;color:#7f8c8d;margin-bottom:3px}
+  input,select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-bottom:10px;background:#fff}
+  input:focus,select:focus{outline:none;border-color:#1a3a5c}
+  button{padding:8px 15px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
+  .btn{background:#1a3a5c;color:#fff}
+  .btn-sm{padding:4px 9px;font-size:12px}
+  .btn-edit{background:#f0ad4e;color:#fff;margin-right:5px}
+  .btn-del{background:#c0392b;color:#fff}
+  .btn-ghost{background:#eee;color:#555}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>div{flex:1;min-width:140px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+  .stat{background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .stat .n{font-size:23px;font-weight:700;color:#1a3a5c}
+  .stat .l{font-size:12px;color:#7f8c8d}
+  .stat.warn .n{color:#c0392b}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:9px;border-bottom:2px solid #eee;color:#7f8c8d;font-size:11px}
+  td{padding:9px;border-bottom:1px solid #f5f5f5}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+  .b-run{background:#e3f2fd;color:#1565c0}
+  .b-plan{background:#fff3e0;color:#e65100}
+  .b-done{background:#e8f5e9;color:#2e7d32}
+  .b-stop{background:#f5f5f5;color:#757575}
+  .bar{background:#eee;border-radius:8px;height:7px;overflow:hidden;min-width:60px}
+  .bar>span{display:block;height:100%;background:#27ae60}
+  .bar.over>span{background:#c0392b}
+  .msg{padding:9px;border-radius:6px;font-size:13px;margin-bottom:10px;display:none}
+  .msg.err{background:#fdecea;color:#c0392b;display:block}
+  .msg.ok{background:#eafaf1;color:#27ae60;display:block}
+  .hint{background:#fff8e6;border-left:4px solid #f0ad4e;padding:9px;border-radius:6px;font-size:12px;color:#6b5b3e;margin-bottom:12px}
+  .hide{display:none}
+  .member{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:13px}
+  @media(max-width:640px){
+    .wrap{padding:12px}
+    th:nth-child(1),td:nth-child(1){display:none}
+    .stat .n{font-size:19px}
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>工程專案派工管理系統</h1>
+      <div class="sub">C# / ASP.NET Core · Entity Framework · JWT 驗證 · 前後端分離</div>
+    </div>
+    <button id="logoutBtn" class="btn btn-sm hide" onclick="logout()">登出</button>
+  </div>
+
+  <!-- 登入 -->
+  <div id="loginView" class="wrap">
+    <div class="card" style="max-width:420px;margin:40px auto">
+      <h2>🔐 登入</h2>
+      <div class="hint"><b>Demo 帳號：</b><code>demo</code> / <code>demo1234</code></div>
+      <div id="loginMsg" class="msg"></div>
+      <label>帳號</label><input id="u" value="demo">
+      <label>密碼</label><input id="p" type="password" value="demo1234">
+      <button class="btn" onclick="login()">登入</button>
+      <button class="btn btn-ghost" onclick="register()">註冊</button>
+    </div>
+  </div>
+
+  <!-- 主系統 -->
+  <div id="appView" class="hide">
+    <div class="tabs">
+      <div class="tab on" onclick="showTab('dash')">📊 儀表板</div>
+      <div class="tab" onclick="showTab('proj')">📁 專案管理</div>
+      <div class="tab" onclick="showTab('staff')">👷 人力配置</div>
+      <div class="tab" onclick="showTab('assign')">🔗 派工</div>
+    </div>
+
+    <div class="wrap">
+      <div id="msg" class="msg"></div>
+
+      <!-- 儀表板 -->
+      <div id="dash" class="view">
+        <div class="cards" id="statCards"></div>
+        <div class="card">
+          <h2>⚠️ 人力超載警示</h2>
+          <div id="overloadList"></div>
+        </div>
+      </div>
+
+      <!-- 專案管理 -->
+      <div id="proj" class="view hide">
+        <div class="card">
+          <h2 id="projTitle">➕ 新增專案</h2>
+          <div class="row">
+            <div><label>專案名稱</label><input id="pName" placeholder="例：台61線橋梁耐震評估"></div>
+            <div><label>業主</label><input id="pClient" placeholder="例：交通部公路局"></div>
+          </div>
+          <div class="row">
+            <div><label>狀態</label>
+              <select id="pStatus"><option>規劃中</option><option>進行中</option><option>已完成</option><option>暫停</option></select>
+            </div>
+            <div><label>預算（萬元）</label><input id="pBudget" type="number" placeholder="4800"></div>
+            <div><label>起始日</label><input id="pStart" type="date"></div>
+            <div><label>結束日</label><input id="pEnd" type="date"></div>
+          </div>
+          <button class="btn" onclick="saveProject()">儲存</button>
+          <button id="pCancel" class="btn btn-ghost hide" onclick="resetProject()">取消</button>
+        </div>
+        <div class="card">
+          <h2>📁 專案列表</h2>
+          <table><thead><tr><th>ID</th><th>專案名稱</th><th>業主</th><th>狀態</th><th>預算</th><th>人力</th><th>操作</th></tr></thead>
+            <tbody id="projList"></tbody></table>
+        </div>
+        <div id="projDetail" class="card hide">
+          <h2>👥 專案成員</h2>
+          <div id="memberList"></div>
+        </div>
+      </div>
+
+      <!-- 人力配置 -->
+      <div id="staff" class="view hide">
+        <div class="card">
+          <h2 id="staffTitle">➕ 新增人員</h2>
+          <div class="row">
+            <div><label>姓名</label><input id="sName" placeholder="例：陳志明"></div>
+            <div><label>職稱</label>
+              <select id="sRole"><option>工程師</option><option>專案經理</option><option>繪圖員</option><option>測量員</option></select>
+            </div>
+            <div><label>專長</label><input id="sSkill" placeholder="例：GIS、空間資料分析"></div>
+          </div>
+          <button class="btn" onclick="saveStaff()">儲存</button>
+          <button id="sCancel" class="btn btn-ghost hide" onclick="resetStaff()">取消</button>
+        </div>
+        <div class="card">
+          <h2>👷 人員與負荷率</h2>
+          <table><thead><tr><th>ID</th><th>姓名</th><th>職稱</th><th>專長</th><th>專案數</th><th>負荷率</th><th>操作</th></tr></thead>
+            <tbody id="staffList"></tbody></table>
+        </div>
+      </div>
+
+      <!-- 派工 -->
+      <div id="assign" class="view hide">
+        <div class="card">
+          <h2>🔗 指派人員到專案</h2>
+          <div class="hint">派工會在「專案」與「人員」之間建立關聯（多對多）。同一人不可重複派到同一專案。</div>
+          <div class="row">
+            <div><label>選擇專案</label><select id="aProject"></select></div>
+            <div><label>選擇人員</label><select id="aStaff"></select></div>
+          </div>
+          <div class="row">
+            <div><label>在此專案的角色</label><input id="aRole" placeholder="例：結構分析"></div>
+            <div><label>投入工時（小時/月）</label><input id="aHours" type="number" placeholder="120"></div>
+          </div>
+          <button class="btn" onclick="doAssign()">派工</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const API = '/api';
+  let token = localStorage.getItem('token');
+  let editProjId = null, editStaffId = null;
+
+  const H = () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token });
+  const $ = id => document.getElementById(id);
+
+  function say(text, ok) {
+    const el = $('msg');
+    el.textContent = text;
+    el.className = 'msg ' + (ok ? 'ok' : 'err');
+    setTimeout(() => el.className = 'msg', 2500);
+  }
+
+  // ── 認證 ──
+  async function login() {
+    const r = await fetch(API + '/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: $('u').value, password: $('p').value }) });
+    const d = await r.json();
+    if (!r.ok) { const m = $('loginMsg'); m.textContent = d.message; m.className = 'msg err'; return; }
+    token = d.token; localStorage.setItem('token', token); enterApp();
+  }
+  async function register() {
+    const r = await fetch(API + '/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: $('u').value, password: $('p').value }) });
+    const d = await r.json();
+    const m = $('loginMsg'); m.textContent = d.message; m.className = 'msg ' + (r.ok ? 'ok' : 'err');
+  }
+  function logout() {
+    token = null; localStorage.removeItem('token');
+    $('loginView').classList.remove('hide'); $('appView').classList.add('hide'); $('logoutBtn').classList.add('hide');
+  }
+  function enterApp() {
+    $('loginView').classList.add('hide'); $('appView').classList.remove('hide'); $('logoutBtn').classList.remove('hide');
+    loadAll();
+  }
+
+  function showTab(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hide'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    $(name).classList.remove('hide');
+    event.target.classList.add('on');
+  }
+
+  async function loadAll() { await Promise.all([loadDash(), loadProjects(), loadStaff()]); loadSelects(); }
+
+  // ── 儀表板 ──
+  async function loadDash() {
+    const r = await fetch(API + '/dashboard', { headers: H() });
+    if (r.status === 401) return logout();
+    const d = await r.json();
+    $('statCards').innerHTML = `
+      <div class="stat"><div class="n">${d.totalProjects}</div><div class="l">專案總數</div></div>
+      <div class="stat"><div class="n">${d.activeProjects}</div><div class="l">進行中專案</div></div>
+      <div class="stat"><div class="n">${d.totalStaff}</div><div class="l">在職人員</div></div>
+      <div class="stat"><div class="n">${d.totalBudget.toLocaleString()} 萬</div><div class="l">專案總預算</div></div>
+      <div class="stat ${d.overloadedCount ? 'warn' : ''}"><div class="n">${d.overloadedCount}</div><div class="l">人力超載人數</div></div>`;
+    $('overloadList').innerHTML = d.overloaded.length
+      ? d.overloaded.map(o => `<div class="member"><span>${o.name}</span><span style="color:#c0392b;font-weight:600">${o.hours} 小時／月（標準 160）</span></div>`).join('')
+      : '<div style="color:#27ae60;font-size:13px">✓ 目前無人力超載</div>';
+  }
+
+  // ── 專案 ──
+  const badge = s => ({ '進行中': 'b-run', '規劃中': 'b-plan', '已完成': 'b-done', '暫停': 'b-stop' })[s] || 'b-stop';
+
+  async function loadProjects() {
+    const r = await fetch(API + '/project', { headers: H() });
+    const list = await r.json();
+    $('projList').innerHTML = list.map(p => `
+      <tr>
+        <td>${p.id}</td>
+        <td><a href="#" onclick="viewProject(${p.id});return false" style="color:#1a3a5c;font-weight:600">${p.name}</a></td>
+        <td>${p.client}</td>
+        <td><span class="badge ${badge(p.status)}">${p.status}</span></td>
+        <td>${p.budget.toLocaleString()} 萬</td>
+        <td>${p.staffCount} 人 / ${p.totalHours} 時</td>
+        <td><button class="btn-sm btn-edit" onclick='editProject(${JSON.stringify(p)})'>編輯</button>
+            <button class="btn-sm btn-del" onclick="delProject(${p.id})">刪除</button></td>
+      </tr>`).join('');
+  }
+
+  async function viewProject(id) {
+    const r = await fetch(`${API}/project/${id}`, { headers: H() });
+    const p = await r.json();
+    $('projDetail').classList.remove('hide');
+    $('memberList').innerHTML = `<div style="font-weight:600;margin-bottom:8px">${p.name}</div>` + (p.members.length
+      ? p.members.map(m => `<div class="member"><span>${m.staffName}（${m.staffRole}）— ${m.roleInProject}</span>
+          <span>${m.hours} 時 <button class="btn-sm btn-del" onclick="unassign(${m.id})">移除</button></span></div>`).join('')
+      : '<div style="color:#999;font-size:13px">尚無派工人員</div>');
+  }
+
+  async function saveProject() {
+    const body = JSON.stringify({
+      name: $('pName').value, client: $('pClient').value, status: $('pStatus').value,
+      budget: Number($('pBudget').value) || 0,
+      startDate: $('pStart').value || new Date().toISOString().slice(0, 10),
+      endDate: $('pEnd').value || new Date().toISOString().slice(0, 10),
+    });
+    const r = editProjId
+      ? await fetch(`${API}/project/${editProjId}`, { method: 'PUT', headers: H(), body })
+      : await fetch(`${API}/project`, { method: 'POST', headers: H(), body });
+    if (r.ok) { say(editProjId ? '專案已更新' : '專案已新增', true); resetProject(); loadAll(); }
+    else say('操作失敗', false);
+  }
+
+  function editProject(p) {
+    editProjId = p.id;
+    $('pName').value = p.name; $('pClient').value = p.client; $('pStatus').value = p.status;
+    $('pBudget').value = p.budget;
+    $('pStart').value = p.startDate.slice(0, 10); $('pEnd').value = p.endDate.slice(0, 10);
+    $('projTitle').textContent = '✏️ 編輯專案 #' + p.id;
+    $('pCancel').classList.remove('hide');
+    window.scrollTo(0, 0);
+  }
+  function resetProject() {
+    editProjId = null;
+    ['pName', 'pClient', 'pBudget', 'pStart', 'pEnd'].forEach(i => $(i).value = '');
+    $('projTitle').textContent = '➕ 新增專案';
+    $('pCancel').classList.add('hide');
+  }
+  async function delProject(id) {
+    if (!confirm('刪除專案會一併刪除其派工紀錄，確定嗎？')) return;
+    const r = await fetch(`${API}/project/${id}`, { method: 'DELETE', headers: H() });
+    if (r.ok) { say('已刪除', true); $('projDetail').classList.add('hide'); loadAll(); }
+  }
+
+  // ── 人員 ──
+  async function loadStaff() {
+    const r = await fetch(API + '/staff', { headers: H() });
+    const list = await r.json();
+    $('staffList').innerHTML = list.map(s => `
+      <tr>
+        <td>${s.id}</td><td>${s.name}</td><td>${s.role}</td><td>${s.skill}</td>
+        <td>${s.projectCount}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="bar ${s.isOverloaded ? 'over' : ''}"><span style="width:${Math.min(s.loadPercent, 100)}%"></span></div>
+            <span style="font-size:12px;${s.isOverloaded ? 'color:#c0392b;font-weight:600' : ''}">${s.loadPercent}%</span>
+          </div>
+        </td>
+        <td><button class="btn-sm btn-edit" onclick='editStaff(${JSON.stringify(s)})'>編輯</button>
+            <button class="btn-sm btn-del" onclick="delStaff(${s.id})">刪除</button></td>
+      </tr>`).join('');
+  }
+
+  async function saveStaff() {
+    const body = JSON.stringify({ name: $('sName').value, role: $('sRole').value, skill: $('sSkill').value, isActive: true });
+    const r = editStaffId
+      ? await fetch(`${API}/staff/${editStaffId}`, { method: 'PUT', headers: H(), body })
+      : await fetch(`${API}/staff`, { method: 'POST', headers: H(), body });
+    if (r.ok) { say(editStaffId ? '人員已更新' : '人員已新增', true); resetStaff(); loadAll(); }
+  }
+  function editStaff(s) {
+    editStaffId = s.id;
+    $('sName').value = s.name; $('sRole').value = s.role; $('sSkill').value = s.skill;
+    $('staffTitle').textContent = '✏️ 編輯人員 #' + s.id;
+    $('sCancel').classList.remove('hide');
+    window.scrollTo(0, 0);
+  }
+  function resetStaff() {
+    editStaffId = null;
+    ['sName', 'sSkill'].forEach(i => $(i).value = '');
+    $('staffTitle').textContent = '➕ 新增人員';
+    $('sCancel').classList.add('hide');
+  }
+  async function delStaff(id) {
+    if (!confirm('確定刪除此人員？其派工紀錄也會一併移除。')) return;
+    const r = await fetch(`${API}/staff/${id}`, { method: 'DELETE', headers: H() });
+    if (r.ok) { say('已刪除', true); loadAll(); }
+  }
+
+  // ── 派工 ──
+  async function loadSelects() {
+    const [pr, sr] = await Promise.all([
+      fetch(API + '/project', { headers: H() }), fetch(API + '/staff', { headers: H() })]);
+    const [ps, ss] = [await pr.json(), await sr.json()];
+    $('aProject').innerHTML = ps.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    $('aStaff').innerHTML = ss.map(s => `<option value="${s.id}">${s.name}（${s.role}）</option>`).join('');
+  }
+
+  async function doAssign() {
+    const r = await fetch(API + '/assignment', { method: 'POST', headers: H(), body: JSON.stringify({
+      projectId: Number($('aProject').value), staffId: Number($('aStaff').value),
+      roleInProject: $('aRole').value, hours: Number($('aHours').value) || 0 }) });
+    const d = await r.json();
+    say(d.message, r.ok);
+    if (r.ok) { $('aRole').value = ''; $('aHours').value = ''; loadAll(); }
+  }
+
+  async function unassign(id) {
+    const r = await fetch(`${API}/assignment/${id}`, { method: 'DELETE', headers: H() });
+    if (r.ok) { say('已移除派工', true); loadAll(); $('projDetail').classList.add('hide'); }
+  }
+
+  if (token) enterApp();
+</script>
+</body>
+</html>
