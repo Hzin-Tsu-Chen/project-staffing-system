@@ -8,6 +8,13 @@ using MyApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 雲端平台（如 Render）以 PORT 環境變數指定埠號；本地開發則沿用預設值
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<AuthService>();

@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: project-staffing-system
+    runtime: docker
+    plan: free
+    region: singapore          # 離台灣最近，延遲較低
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      # JWT 簽章金鑰由 Render 自動產生隨機值（不寫在程式碼裡）
+      - key: Jwt__Key
+        generateValue: true
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
