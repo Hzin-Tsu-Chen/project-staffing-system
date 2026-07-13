@@ -212,6 +212,16 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// 健康檢查（免驗證）。
+// Render 免費方案在閒置 15 分鐘後會讓服務休眠，下次造訪需等 30~60 秒冷啟動；
+// 由外部監控服務（UptimeRobot）每 10 分鐘打這個端點，服務就不會睡著，
+// 面試官點連結進來即為秒開。
+app.MapGet("/api/health", () => Results.Ok(new
+{
+    status = "ok",
+    time = DateTime.UtcNow,
+}));
+
 app.UseDefaultFiles();     // 讓 wwwroot/index.html 成為首頁
 app.UseStaticFiles();      // 提供前端靜態檔案
 app.UseCors();

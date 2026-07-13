@@ -4,49 +4,122 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>工程專案派工管理系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,"PingFang TC",sans-serif}
-  body{background:#f0f2f5;color:#2c3e50;line-height:1.6}
-  .header{background:#1a3a5c;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-  .header h1{font-size:18px}
-  .header .sub{font-size:11px;opacity:.75}
-  .tabs{background:#fff;border-bottom:1px solid #e0e0e0;display:flex;overflow-x:auto}
-  .tab{padding:12px 18px;cursor:pointer;font-size:14px;font-weight:600;color:#7f8c8d;border-bottom:3px solid transparent;white-space:nowrap}
-  .tab.on{color:#1a3a5c;border-bottom-color:#1a3a5c}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px}
-  .card{background:#fff;border-radius:10px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:16px}
-  h2{font-size:15px;color:#1a3a5c;margin-bottom:14px;border-left:4px solid #1a3a5c;padding-left:8px}
-  label{display:block;font-size:12px;color:#7f8c8d;margin-bottom:3px}
-  input,select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-bottom:10px;background:#fff}
-  input:focus,select:focus{outline:none;border-color:#1a3a5c}
-  button{padding:8px 15px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
-  .btn{background:#1a3a5c;color:#fff}
-  .btn-sm{padding:4px 9px;font-size:12px}
-  .btn-edit{background:#f0ad4e;color:#fff;margin-right:5px}
-  .btn-del{background:#c0392b;color:#fff}
-  .btn-ghost{background:#eee;color:#555}
-  .row{display:flex;gap:10px;flex-wrap:wrap}
+  /* ─────────────────────────────────────────────────────────────
+     視覺語言：企業內部工具（internal tooling）
+     深色側邊導覽、緊湊表格、等寬數字對齊、冷灰藍。
+     字體用 IBM Plex —— IBM 為工程與資訊場景設計的字體家族，
+     帶有工業感與清楚的數字辨識度，與另一個作品的報導風格刻意區隔。
+     ───────────────────────────────────────────────────────────── */
+  :root{
+    --nav:#161c26;         /* 側邊欄深底 */
+    --nav-2:#1f2733;
+    --nav-txt:#8a95a5;
+    --canvas:#f5f6f8;      /* 工作區底色 */
+    --surface:#fff;
+    --line:#e3e6ea;
+    --line-2:#eef0f3;
+    --txt:#1c2430;
+    --txt-2:#5a6675;
+    --txt-3:#8b95a3;
+    --brand:#2f6fd0;       /* 冷藍：主要動作 */
+    --ok:#1e8e5a;
+    --warn:#c2721a;
+    --danger:#c0392b;
+    --sans:"IBM Plex Sans","Noto Sans TC",-apple-system,"PingFang TC",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--canvas);color:var(--txt);font-family:var(--sans);font-size:14px;line-height:1.55;
+       -webkit-font-smoothing:antialiased}
+  /* 數字一律等寬對齊 —— 表格裡的工時、預算、百分比才不會跳動 */
+  td,th,.stat .n,.g-name small,.chip,.ph-d,.bar+span{font-variant-numeric:tabular-nums}
+
+  /* ── 應用外殼：左側深色導覽 ── */
+  .shell{display:grid;grid-template-columns:216px 1fr;min-height:100vh}
+  .nav{background:var(--nav);color:#fff;display:flex;flex-direction:column;padding:18px 0}
+  .brand{padding:0 18px 18px;border-bottom:1px solid #2a3441;margin-bottom:14px}
+  .brand h1{font-size:14px;font-weight:600;letter-spacing:.01em;line-height:1.4}
+  .brand .sub{font-family:var(--mono);font-size:10px;color:var(--nav-txt);margin-top:6px;letter-spacing:.02em}
+  .nav-sec{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+           color:#5d6a7c;padding:0 18px;margin-bottom:6px}
+  .tab{display:flex;align-items:center;gap:9px;padding:9px 18px;cursor:pointer;font-size:13.5px;
+       font-weight:500;color:var(--nav-txt);border-left:3px solid transparent;transition:background .12s,color .12s}
+  .tab:hover{background:var(--nav-2);color:#dfe4ea}
+  .tab.on{background:var(--nav-2);color:#fff;border-left-color:var(--brand);font-weight:600}
+  .tab .k{font-family:var(--mono);font-size:10px;color:#5d6a7c;margin-left:auto}
+  .tab.on .k{color:#7f8ea3}
+  .nav-foot{margin-top:auto;padding:14px 18px 0;border-top:1px solid #2a3441}
+  .nav-user{font-size:11.5px;color:var(--nav-txt);margin-bottom:9px}
+  .nav-user b{color:#dfe4ea;font-weight:600}
+
+  .main-col{display:flex;flex-direction:column;min-width:0}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--line);padding:13px 22px;
+          display:flex;justify-content:space-between;align-items:center;gap:12px;
+          position:sticky;top:0;z-index:20}
+  .topbar h2{font-size:15px;font-weight:600;color:var(--txt);border:none;padding:0;margin:0}
+  .crumb{font-family:var(--mono);font-size:10.5px;color:var(--txt-3);margin-bottom:1px}
+  .wrap{padding:20px 22px 40px;max-width:1180px;width:100%}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:16px 18px;margin-bottom:14px}
+  h2{font-size:13px;font-weight:600;color:var(--txt);margin-bottom:13px;
+     letter-spacing:.02em;display:flex;align-items:center;gap:7px}
+  h2::before{content:'';width:3px;height:13px;background:var(--brand);border-radius:1px}
+
+  label{display:block;font-size:11px;color:var(--txt-2);margin-bottom:4px;font-weight:500}
+  input,select{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:3px;font-size:13.5px;
+               margin-bottom:10px;background:var(--surface);font-family:var(--sans);color:var(--txt)}
+  input:focus,select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,111,208,.12)}
+  button{padding:7px 14px;border:1px solid transparent;border-radius:3px;font-size:12.5px;font-weight:600;
+         cursor:pointer;font-family:var(--sans);transition:background .12s}
+  .btn{background:var(--brand);color:#fff}
+  .btn:hover{background:#2760b8}
+  .btn-sm{padding:3px 8px;font-size:11.5px}
+  .btn-edit{background:var(--surface);color:var(--txt-2);border-color:var(--line);margin-right:5px}
+  .btn-edit:hover{background:var(--canvas);color:var(--txt)}
+  .btn-del{background:var(--surface);color:var(--danger);border-color:#f0d6d3}
+  .btn-del:hover{background:#fdf3f2}
+  .btn-ghost{background:var(--surface);color:var(--txt-2);border-color:var(--line)}
+
+  .row{display:flex;gap:12px;flex-wrap:wrap}
   .row>div{flex:1;min-width:140px}
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
-  .stat{background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-  .stat .n{font-size:23px;font-weight:700;color:#1a3a5c}
-  .stat .l{font-size:12px;color:#7f8c8d}
-  .stat.warn .n{color:#c0392b}
+
+  /* KPI：緊湊、無陰影、以邊框界定 */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;margin-bottom:14px;
+         background:var(--surface);border:1px solid var(--line);border-radius:4px}
+  .stat{padding:14px 16px;border-left:1px solid var(--line-2)}
+  .stat:first-child{border-left:none}
+  .stat .n{font-size:24px;font-weight:600;color:var(--txt);line-height:1.2;letter-spacing:-.01em}
+  .stat .l{font-size:11px;color:var(--txt-3);margin-top:3px}
+  .stat.warn .n{color:var(--danger)}
+
   table{width:100%;border-collapse:collapse;font-size:13px}
-  th{text-align:left;padding:9px;border-bottom:2px solid #eee;color:#7f8c8d;font-size:11px}
-  td{padding:9px;border-bottom:1px solid #f5f5f5}
-  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
-  .b-run{background:#e3f2fd;color:#1565c0}
-  .b-plan{background:#fff3e0;color:#e65100}
-  .b-done{background:#e8f5e9;color:#2e7d32}
-  .b-stop{background:#f5f5f5;color:#757575}
-  .bar{background:#eee;border-radius:8px;height:7px;overflow:hidden;min-width:60px}
-  .bar>span{display:block;height:100%;background:#27ae60}
-  .bar.over>span{background:#c0392b}
-  .msg{padding:9px;border-radius:6px;font-size:13px;margin-bottom:10px;display:none}
-  .msg.err{background:#fdecea;color:#c0392b;display:block}
-  .msg.ok{background:#eafaf1;color:#27ae60;display:block}
-  .hint{background:#fff8e6;border-left:4px solid #f0ad4e;padding:9px;border-radius:6px;font-size:12px;color:#6b5b3e;margin-bottom:12px}
+  th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);color:var(--txt-3);
+     font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+  td{padding:9px 10px;border-bottom:1px solid var(--line-2)}
+  tbody tr:last-child td{border-bottom:none}
+
+  .badge{display:inline-block;padding:1px 7px;border-radius:2px;font-size:10.5px;font-weight:600;
+         border:1px solid transparent}
+  .b-run{background:#eaf2fd;color:#1e5aa8;border-color:#d3e3f8}
+  .b-plan{background:#fdf3e7;color:#96591a;border-color:#f5e2c9}
+  .b-done{background:#eaf5ef;color:#1e6b47;border-color:#d2e8dd}
+  .b-stop{background:#f2f3f5;color:#6b7480;border-color:#e5e7ea}
+
+  .bar{background:var(--line-2);border-radius:2px;height:6px;overflow:hidden;min-width:56px}
+  .bar>span{display:block;height:100%;background:var(--brand)}
+  .bar.over>span{background:var(--danger)}
+
+  .msg{padding:9px 12px;border-radius:3px;font-size:12.5px;margin-bottom:12px;display:none;border:1px solid transparent}
+  .msg.err{background:#fdf3f2;color:var(--danger);border-color:#f0d6d3;display:block}
+  .msg.ok{background:#eef8f3;color:var(--ok);border-color:#d2e8dd;display:block}
+  .hint{background:#fafbfc;border:1px solid var(--line);border-left:3px solid var(--brand);
+        padding:9px 12px;border-radius:3px;font-size:12px;color:var(--txt-2);margin-bottom:12px;line-height:1.7}
+  .hint code{font-family:var(--mono);background:var(--canvas);padding:1px 5px;border-radius:2px;
+             font-size:11.5px;color:var(--txt)}
   .hide{display:none}
   .member{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:13px}
 
@@ -59,30 +132,30 @@
   .gantt{font-size:12px;overflow-x:auto}
   .g-inner{min-width:760px}
   .g-row{display:flex;align-items:stretch;gap:10px;padding:8px 0;border-bottom:1px solid #f4f6f8}
-  .g-name{width:180px;flex-shrink:0;font-weight:600;color:#2c3e50;font-size:12.5px;align-self:center}
-  .g-name small{display:block;font-weight:400;color:#95a5a6;font-size:10.5px}
+  .g-name{width:180px;flex-shrink:0;font-weight:600;color:var(--txt);font-size:12.5px;align-self:center}
+  .g-name small{display:block;font-weight:400;color:var(--txt-3);font-size:10.5px}
   .g-track{flex:1;position:relative;height:30px;background:#f4f6f8;border-radius:4px;min-width:200px}
   .g-now{width:118px;flex-shrink:0;align-self:center;font-size:11px}
 
   /* 時間軸表頭 */
   .g-head{display:flex;gap:10px;align-items:flex-end;border-bottom:2px solid #dde3e9;padding-bottom:4px;margin-bottom:2px}
   .g-head .g-track{background:none;height:auto;min-height:20px}
-  .g-tick{position:absolute;bottom:0;font-size:10px;color:#7f8c8d;border-left:1px solid #e3e8ec;padding-left:3px;height:16px;white-space:nowrap}
-  .g-tick.y{color:#1a3a5c;font-weight:700;border-left-color:#b9c6d1}
+  .g-tick{position:absolute;bottom:0;font-size:10px;color:var(--txt-3);border-left:1px solid #e3e8ec;padding-left:3px;height:16px;white-space:nowrap}
+  .g-tick.y{color:var(--brand);font-weight:700;border-left-color:#b9c6d1}
 
   /* 階段區塊 */
   .g-seg{position:absolute;top:0;height:30px;border-right:1px solid #fff;display:flex;align-items:center;
          justify-content:center;overflow:hidden;font-size:10px;white-space:nowrap;padding:0 3px;cursor:default}
-  .g-seg.todo{background:#e4e8ec;color:#8b98a5}
-  .g-seg.done{background:#bcd5ea;color:#2b567f}
-  .g-seg.now{background:#1a3a5c;color:#fff;font-weight:700;box-shadow:0 0 0 2px #f0ad4e}
+  .g-seg.todo{background:#e4e8ec;color:var(--txt-3)}
+  .g-seg.done{background:#cbdcf3;color:#245695}
+  .g-seg.now{background:var(--brand);color:#fff;font-weight:700;box-shadow:0 0 0 2px #f0ad4e}
   .g-seg:first-child{border-radius:4px 0 0 4px}
   .g-seg:last-child{border-radius:0 4px 4px 0;border-right:none}
   .g-today{position:absolute;top:-5px;bottom:-5px;width:2px;background:#c0392b;z-index:3}
   /* 今日的文字標籤只在表頭出現一次，各列僅畫線 */
   .g-today.lbl{top:auto;bottom:-4px;height:14px}
   .g-today.lbl::after{content:'今日';position:absolute;top:-14px;left:-11px;font-size:10px;color:#c0392b;font-weight:700;background:#fff;padding:0 2px}
-  .chip{display:inline-block;padding:3px 8px;border-radius:10px;font-size:10.5px;font-weight:700;background:#eef3f8;color:#1a3a5c}
+  .chip{display:inline-block;padding:3px 8px;border-radius:10px;font-size:10.5px;font-weight:700;background:#eef3f8;color:var(--brand)}
   .chip.hot{background:#fff3e0;color:#e65100}
   .chip.fin{background:#e8f5e9;color:#2e7d32}
 
@@ -90,72 +163,138 @@
   .ph-row{display:flex;align-items:flex-start;gap:10px;padding:10px 8px;border-bottom:1px solid #f5f7f9;font-size:12.5px}
   .ph-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px}
   .ph-row.done .ph-dot{background:#3d7ab8}
-  .ph-row.now  .ph-dot{background:#1a3a5c;box-shadow:0 0 0 3px #ffe0b2}
+  .ph-row.now  .ph-dot{background:var(--brand);box-shadow:0 0 0 3px #ffe0b2}
   .ph-row.todo .ph-dot{background:#d4dae0}
   .ph-row.now{background:#fffaf2;border-radius:6px}
-  .ph-row.todo{color:#95a5a6}
+  .ph-row.todo{color:var(--txt-3)}
   .ph-body{flex:1;min-width:0}
-  .ph-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:700;color:#2c3e50}
-  .ph-row.todo .ph-head{font-weight:600;color:#8b98a5}
-  .ph-head .ph-d{font-weight:400;color:#95a5a6;font-size:11px;white-space:nowrap}
+  .ph-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:700;color:var(--txt)}
+  .ph-row.todo .ph-head{font-weight:600;color:var(--txt-3)}
+  .ph-head .ph-d{font-weight:400;color:var(--txt-3);font-size:11px;white-space:nowrap}
   /* 白話說明：讓非工程背景的人也看得懂這階段在做什麼 */
-  .ph-note{margin-top:3px;font-size:12px;line-height:1.7;color:#7f8c8d;font-weight:400}
-  .ph-row.now .ph-note{color:#5d6d7e}
+  .ph-note{margin-top:3px;font-size:12px;line-height:1.7;color:var(--txt-3);font-weight:400}
+  .ph-row.now .ph-note{color:var(--txt-2)}
 
   /* 專案詳情 */
   .p-head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:12px;margin-bottom:12px;border-bottom:2px solid #eef2f5}
   .p-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
   .p-meta div{background:#f8fafc;border-radius:6px;padding:8px 10px}
-  .p-meta .k{font-size:11px;color:#95a5a6}
-  .p-meta .v{font-size:14px;font-weight:700;color:#1a3a5c}
-  .m-card{border:1px solid #e8edf2;border-radius:8px;padding:11px 13px;margin-bottom:9px;background:#fff}
+  .p-meta .k{font-size:11px;color:var(--txt-3)}
+  .p-meta .v{font-size:14px;font-weight:700;color:var(--brand)}
+  .m-card{border:1px solid #e8edf2;border-radius:3px;padding:11px 13px;margin-bottom:9px;background:#fff}
   .m-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
-  .m-name{font-weight:700;font-size:14px;color:#1a3a5c}
+  .m-name{font-weight:700;font-size:14px;color:var(--brand)}
   .m-role{font-size:11px;background:#eef3f8;color:#4a6785;padding:2px 8px;border-radius:9px;margin-left:6px}
-  .m-work{font-size:13px;color:#2c3e50;margin:6px 0}
-  .m-work b{color:#7f8c8d;font-weight:600;font-size:11px;display:block}
-  .m-contact{font-size:12px;color:#7f8c8d;display:flex;gap:14px;flex-wrap:wrap}
-  .m-contact a{color:#1a6fa8;text-decoration:none}
+  .m-work{font-size:13px;color:var(--txt);margin:6px 0}
+  .m-work b{color:var(--txt-3);font-weight:600;font-size:11px;display:block}
+  .m-contact{font-size:12px;color:var(--txt-3);display:flex;gap:16px;flex-wrap:wrap}
+  .m-contact b{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-3);font-weight:600;margin-right:2px}
+  .m-contact a{color:var(--brand);text-decoration:none}
 
-  @media(max-width:640px){
-    .wrap{padding:12px}
+  /* 喚醒畫面：Render 免費方案冷啟動時，避免使用者看到一片白 */
+  .boot{position:fixed;inset:0;z-index:100;background:var(--nav);color:#fff;
+        display:flex;align-items:center;justify-content:center;padding:24px}
+  .boot-in{max-width:340px;text-align:center}
+  .boot h1{font-size:15px;font-weight:600;margin-bottom:10px}
+  .boot p{font-size:12.5px;color:var(--nav-txt);line-height:1.8}
+  .boot .prog{height:3px;background:#2a3441;border-radius:2px;overflow:hidden;margin:18px 0 14px}
+  .boot .prog>span{display:block;height:100%;width:35%;background:var(--brand);border-radius:2px;
+                   animation:slide 1.3s ease-in-out infinite}
+  @keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(390%)}}
+  .boot .tech{font-family:var(--mono);font-size:10px;color:#5d6a7c;margin-top:16px;line-height:1.9}
+
+  /* 登入頁：置中的單一表單，深色底突顯這是一套「要登入才能用」的內部系統 */
+  .login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+              background:var(--nav);
+              background-image:radial-gradient(circle at 1px 1px,#232c39 1px,transparent 0);
+              background-size:22px 22px}
+  .login-box{background:var(--surface);border-radius:6px;padding:28px;width:100%;max-width:380px;
+             box-shadow:0 12px 40px rgba(0,0,0,.35)}
+  .login-brand{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .login-brand h1{font-size:17px;font-weight:600;color:var(--txt)}
+  .login-brand .sub{font-family:var(--mono);font-size:10.5px;color:var(--txt-3);margin-top:6px}
+
+  @media(max-width:820px){
+    /* 手機沒有側邊欄的空間，改為頂部深色橫向導覽 */
+    .shell{grid-template-columns:1fr}
+    .nav{flex-direction:row;flex-wrap:wrap;align-items:center;padding:10px 12px;gap:4px}
+    .brand{padding:0 10px 0 4px;border-bottom:none;margin:0;border-right:1px solid #2a3441;flex:1 0 100%;
+           padding-bottom:9px;margin-bottom:8px;border-right:none;border-bottom:1px solid #2a3441}
+    .brand h1{font-size:13px}
+    .brand h1 br{display:none}
+    .nav-sec{display:none}
+    .tab{border-left:none;border-bottom:2px solid transparent;padding:7px 11px;border-radius:3px;font-size:12.5px}
+    .tab.on{border-left-color:transparent;border-bottom-color:var(--brand)}
+    .tab .k{display:none}
+    .nav-foot{margin:0 0 0 auto;padding:0;border-top:none}
+    .nav-user{display:none}
+    .topbar{padding:11px 14px}
+    .wrap{padding:14px}
     th:nth-child(1),td:nth-child(1){display:none}
     .stat .n{font-size:19px}
+    .cards{grid-template-columns:1fr 1fr}
+    .stat{border-top:1px solid var(--line-2)}
+    .stat:nth-child(-n+2){border-top:none}
+    .stat:nth-child(odd){border-left:none}
     .g-name{width:110px;font-size:11px}
-    .g-axis{margin-left:120px}
   }
 </style>
 </head>
 <body>
-  <div class="header">
-    <div>
+  <!-- 冷啟動喚醒畫面 -->
+  <div id="boot" class="boot">
+    <div class="boot-in">
       <h1>工程專案派工管理系統</h1>
-      <div class="sub">C# / ASP.NET Core · Entity Framework · JWT 驗證 · 前後端分離</div>
+      <div class="prog"><span></span></div>
+      <p id="bootMsg">正在連線伺服器…</p>
+      <div class="tech">ASP.NET Core · Docker · Render (Singapore)</div>
     </div>
-    <button id="logoutBtn" class="btn btn-sm hide" onclick="logout()">登出</button>
   </div>
 
   <!-- 登入 -->
-  <div id="loginView" class="wrap">
-    <div class="card" style="max-width:420px;margin:40px auto">
-      <h2>🔐 登入</h2>
-      <div class="hint"><b>Demo 帳號：</b><code>demo</code> / <code>demo1234</code></div>
+  <div id="loginView" class="login-page">
+    <div class="login-box">
+      <div class="login-brand">
+        <h1>工程專案派工管理系統</h1>
+        <div class="sub">C# / ASP.NET Core · Entity Framework Core · JWT · SQLite</div>
+      </div>
+      <div class="hint"><b>Demo 帳號</b>　<code>demo</code> ／ <code>demo1234</code></div>
       <div id="loginMsg" class="msg"></div>
       <label>帳號</label><input id="u" value="demo">
       <label>密碼</label><input id="p" type="password" value="demo1234">
-      <button class="btn" onclick="login()">登入</button>
-      <button class="btn btn-ghost" onclick="register()">註冊</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" style="flex:1" onclick="login()">登入</button>
+        <button class="btn btn-ghost" onclick="register()">註冊</button>
+      </div>
     </div>
   </div>
 
   <!-- 主系統 -->
-  <div id="appView" class="hide">
-    <div class="tabs">
-      <div class="tab on" onclick="showTab('dash')">📊 儀表板</div>
-      <div class="tab" onclick="showTab('proj')">📁 專案管理</div>
-      <div class="tab" onclick="showTab('staff')">👷 人力配置</div>
-      <div class="tab" onclick="showTab('assign')">🔗 派工</div>
-    </div>
+  <div id="appView" class="shell hide">
+    <!-- 側邊導覽 -->
+    <aside class="nav">
+      <div class="brand">
+        <h1>工程專案<br>派工管理系統</h1>
+        <div class="sub">ASP.NET Core · EF Core</div>
+      </div>
+      <div class="nav-sec">Workspace</div>
+      <div class="tab on" data-t="dash"  onclick="showTab('dash')">儀表板<span class="k">01</span></div>
+      <div class="tab"    data-t="proj"  onclick="showTab('proj')">專案管理<span class="k">02</span></div>
+      <div class="tab"    data-t="staff" onclick="showTab('staff')">人力配置<span class="k">03</span></div>
+      <div class="tab"    data-t="assign" onclick="showTab('assign')">派工<span class="k">04</span></div>
+      <div class="nav-foot">
+        <div class="nav-user">已登入　<b id="navUser">demo</b></div>
+        <button class="btn-ghost btn-sm" style="width:100%" onclick="logout()">登出</button>
+      </div>
+    </aside>
+
+    <div class="main-col">
+      <div class="topbar">
+        <div>
+          <div class="crumb" id="crumb">/ dashboard</div>
+          <h2 id="pageTitle">儀表板</h2>
+        </div>
+      </div>
 
     <div class="wrap">
       <div id="msg" class="msg"></div>
@@ -164,7 +303,7 @@
       <div id="dash" class="view">
         <div class="cards" id="statCards"></div>
         <div class="card">
-          <h2>⚠️ 人力超載警示</h2>
+          <h2>人力超載警示</h2>
           <div id="overloadList"></div>
         </div>
       </div>
@@ -172,15 +311,15 @@
       <!-- 專案管理 -->
       <div id="proj" class="view hide">
         <div class="card">
-          <h2>📅 專案時程甘特圖</h2>
+          <h2>專案時程甘特圖</h2>
           <div class="hint">
-            每個專案的橫條依<b>工作階段</b>切成區塊：<span style="color:#7f8c8d">灰＝未開始</span>、<span style="color:#1a3a5c;font-weight:700">深藍＝進行中的階段</span>、<span style="color:#3d7ab8">淺藍＝已完成</span>，<span style="color:#c0392b;font-weight:700">紅線＝今日</span>。<br>
+            每個專案的橫條依<b>工作階段</b>切成區塊：<span style="color:var(--txt-3)">灰＝未開始</span>、<span style="color:var(--brand);font-weight:700">深藍＝進行中的階段</span>、<span style="color:#3d7ab8">淺藍＝已完成</span>，<span style="color:#c0392b;font-weight:700">紅線＝今日</span>。<br>
             階段劃分參考行政院公共工程委員會「機關委託技術服務廠商評選及計費辦法」第 4~9 條之技術服務類型（可行性研究／規劃／設計／監造／專案管理），再依各案性質細分。點任一列可看專案詳情。
           </div>
           <div id="gantt" class="gantt"></div>
         </div>
         <div class="card">
-          <h2>📁 專案列表</h2>
+          <h2>專案列表</h2>
           <div class="hint">點選任一列可展開專案詳情（工作階段、成員、負責工作項目、聯絡方式）。</div>
           <div style="overflow-x:auto">
           <table><thead><tr><th>ID</th><th>專案名稱</th><th>業主</th><th>狀態</th><th>目前階段</th><th>預算</th><th>進度</th><th>人力</th><th>操作</th></tr></thead>
@@ -189,7 +328,7 @@
         </div>
         <div id="projDetail" class="card hide"></div>
         <div class="card">
-          <h2 id="projTitle">➕ 新增專案</h2>
+          <h2 id="projTitle">新增專案</h2>
           <div class="row">
             <div><label>專案名稱</label><input id="pName" placeholder="例：台61線橋梁耐震評估"></div>
             <div><label>業主</label><input id="pClient" placeholder="例：交通部公路局"></div>
@@ -210,7 +349,7 @@
       <!-- 人力配置 -->
       <div id="staff" class="view hide">
         <div class="card">
-          <h2 id="staffTitle">➕ 新增人員</h2>
+          <h2 id="staffTitle">新增人員</h2>
           <div class="row">
             <div><label>姓名</label><input id="sName" placeholder="例：陳志明"></div>
             <div><label>職稱</label>
@@ -226,7 +365,7 @@
           <button id="sCancel" class="btn btn-ghost hide" onclick="resetStaff()">取消</button>
         </div>
         <div class="card">
-          <h2>👷 人員與負荷率</h2>
+          <h2>人員與負荷率</h2>
           <table><thead><tr><th>ID</th><th>姓名</th><th>職稱</th><th>專長</th><th>聯絡方式</th><th>專案數</th><th>負荷率</th><th>操作</th></tr></thead>
             <tbody id="staffList"></tbody></table>
         </div>
@@ -235,7 +374,7 @@
       <!-- 派工 -->
       <div id="assign" class="view hide">
         <div class="card">
-          <h2>🔗 指派人員到專案</h2>
+          <h2>指派人員到專案</h2>
           <div class="hint">派工會在「專案」與「人員」之間建立關聯（多對多）。同一人不可重複派到同一專案。</div>
           <div class="row">
             <div><label>選擇專案</label><select id="aProject"></select></div>
@@ -248,6 +387,7 @@
           <button class="btn" onclick="doAssign()">派工</button>
         </div>
       </div>
+    </div>
     </div>
   </div>
 
@@ -282,18 +422,29 @@
   }
   function logout() {
     token = null; localStorage.removeItem('token');
-    $('loginView').classList.remove('hide'); $('appView').classList.add('hide'); $('logoutBtn').classList.add('hide');
+    $('loginView').classList.remove('hide'); $('appView').classList.add('hide');
   }
   function enterApp() {
-    $('loginView').classList.add('hide'); $('appView').classList.remove('hide'); $('logoutBtn').classList.remove('hide');
+    $('loginView').classList.add('hide'); $('appView').classList.remove('hide');
+    $('navUser').textContent = $('u').value || 'demo';
     loadAll();
   }
 
+  // 側邊欄各頁的標題與麵包屑
+  const PAGES = {
+    dash:   { title: '儀表板',   crumb: '/ dashboard' },
+    proj:   { title: '專案管理', crumb: '/ projects' },
+    staff:  { title: '人力配置', crumb: '/ staff' },
+    assign: { title: '派工',     crumb: '/ assignments' },
+  };
+
   function showTab(name) {
     document.querySelectorAll('.view').forEach(v => v.classList.add('hide'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.t === name));
     $(name).classList.remove('hide');
-    event.target.classList.add('on');
+    $('pageTitle').textContent = PAGES[name].title;
+    $('crumb').textContent = PAGES[name].crumb;
+    window.scrollTo(0, 0);
   }
 
   async function loadAll() { await Promise.all([loadDash(), loadProjects(), loadStaff()]); loadSelects(); }
@@ -337,7 +488,7 @@
     $('projList').innerHTML = projects.map(p => `
       <tr class="click" data-id="${p.id}" onclick="viewProject(${p.id})">
         <td>${p.id}</td>
-        <td style="color:#1a3a5c;font-weight:600">${p.name}</td>
+        <td style="color:var(--brand);font-weight:600">${p.name}</td>
         <td>${p.client}</td>
         <td><span class="badge ${badge(p.status)}">${p.status}</span></td>
         <td><span class="chip ${p.status === '已完成' ? 'fin' : (p.currentPhase === '尚未開案' ? '' : 'hot')}">${p.currentPhase}</span></td>
@@ -384,9 +535,9 @@
 
     const head = `
       <div class="g-head">
-        <div class="g-name" style="color:#7f8c8d;font-size:11px">專案 / 工期</div>
+        <div class="g-name" style="color:var(--txt-3);font-size:11px">專案 / 工期</div>
         <div class="g-track">${ticks}${todayLabel}</div>
-        <div class="g-now" style="color:#7f8c8d;font-size:11px">目前階段</div>
+        <div class="g-now" style="color:var(--txt-3);font-size:11px">目前階段</div>
       </div>`;
 
     // 依開始日排序，甘特圖才有階梯感
@@ -427,14 +578,14 @@
         <div class="m-card">
           <div class="m-top">
             <div><span class="m-name">${m.staffName}</span><span class="m-role">${m.staffRole}</span></div>
-            <div style="font-size:12px;color:#7f8c8d">投入 <b style="color:#1a3a5c">${m.hours}</b> 小時／月
+            <div style="font-size:12px;color:var(--txt-3)">投入 <b style="color:var(--brand)">${m.hours}</b> 小時／月
               <button class="btn-sm btn-del" style="margin-left:8px" onclick="unassign(${m.id})">移除</button></div>
           </div>
           <div class="m-work"><b>主要負責工作項目</b>${m.roleInProject || '—'}</div>
           <div class="m-contact">
-            <span>✉️ <a href="mailto:${m.staffEmail}">${m.staffEmail || '—'}</a></span>
-            <span>📞 <a href="tel:${m.staffPhone}">${m.staffPhone || '—'}</a></span>
-            <span>🛠️ 專長：${m.staffSkill || '—'}</span>
+            <span><b>Email</b> <a href="mailto:${m.staffEmail}">${m.staffEmail || '—'}</a></span>
+            <span><b>電話</b> <a href="tel:${m.staffPhone}">${m.staffPhone || '—'}</a></span>
+            <span><b>專長</b> ${m.staffSkill || '—'}</span>
           </div>
         </div>`).join('')
       : '<div style="color:#999;font-size:13px">尚無派工人員，請至「派工」頁面指派。</div>';
@@ -443,8 +594,8 @@
     $('projDetail').innerHTML = `
       <div class="p-head">
         <div>
-          <h2 style="margin-bottom:4px">📁 ${p.name}</h2>
-          <div style="font-size:12px;color:#7f8c8d;padding-left:12px">業主：${p.client}</div>
+          <h2 style="margin-bottom:4px">${p.name}</h2>
+          <div style="font-size:12px;color:var(--txt-3);padding-left:12px">業主：${p.client}</div>
         </div>
         <span class="badge ${badge(p.status)}" style="height:fit-content">${p.status}</span>
       </div>
@@ -458,7 +609,7 @@
       </div>
       <div class="bar" style="height:10px;margin-bottom:18px"><span style="width:${p.progress}%"></span></div>
 
-      <h2>🧭 工作階段（${p.phases.length} 階段）</h2>
+      <h2>工作階段（${p.phases.length} 階段）</h2>
       <div style="margin-bottom:18px">${p.phases.map(ph => `
         <div class="ph-row ${ph.state}">
           <span class="ph-dot"></span>
@@ -472,7 +623,7 @@
           </div>
         </div>`).join('')}</div>
 
-      <h2>👥 專案成員與分工（${p.members.length} 人）</h2>
+      <h2>專案成員與分工（${p.members.length} 人）</h2>
       ${members}`;
     $('projDetail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -496,14 +647,14 @@
     $('pName').value = p.name; $('pClient').value = p.client; $('pStatus').value = p.status;
     $('pBudget').value = p.budget;
     $('pStart').value = p.startDate.slice(0, 10); $('pEnd').value = p.endDate.slice(0, 10);
-    $('projTitle').textContent = '✏️ 編輯專案 #' + p.id;
+    $('projTitle').textContent = '編輯專案 #' + p.id;
     $('pCancel').classList.remove('hide');
     window.scrollTo(0, 0);
   }
   function resetProject() {
     editProjId = null;
     ['pName', 'pClient', 'pBudget', 'pStart', 'pEnd'].forEach(i => $(i).value = '');
-    $('projTitle').textContent = '➕ 新增專案';
+    $('projTitle').textContent = '新增專案';
     $('pCancel').classList.add('hide');
   }
   async function delProject(id) {
@@ -523,7 +674,7 @@
     $('staffList').innerHTML = list.map(s => `
       <tr>
         <td>${s.id}</td><td>${s.name}</td><td>${s.role}</td><td>${s.skill}</td>
-        <td style="font-size:11.5px;color:#7f8c8d">${s.email || '—'}<br>${s.phone || '—'}</td>
+        <td style="font-size:11.5px;color:var(--txt-3)">${s.email || '—'}<br>${s.phone || '—'}</td>
         <td>${s.projectCount}</td>
         <td>
           <div style="display:flex;align-items:center;gap:6px">
@@ -550,14 +701,14 @@
     editStaffId = s.id;
     $('sName').value = s.name; $('sRole').value = s.role; $('sSkill').value = s.skill;
     $('sEmail').value = s.email || ''; $('sPhone').value = s.phone || '';
-    $('staffTitle').textContent = '✏️ 編輯人員 #' + s.id;
+    $('staffTitle').textContent = '編輯人員 #' + s.id;
     $('sCancel').classList.remove('hide');
     window.scrollTo(0, 0);
   }
   function resetStaff() {
     editStaffId = null;
     ['sName', 'sSkill', 'sEmail', 'sPhone'].forEach(i => $(i).value = '');
-    $('staffTitle').textContent = '➕ 新增人員';
+    $('staffTitle').textContent = '新增人員';
     $('sCancel').classList.add('hide');
   }
   async function delStaff(id) {
@@ -589,7 +740,33 @@
     if (r.ok) { say('已移除派工', true); loadAll(); $('projDetail').classList.add('hide'); }
   }
 
-  if (token) enterApp();
+  // ── 啟動：先確認後端已醒 ──
+  // Render 免費方案閒置後會休眠，冷啟動需 30~60 秒。
+  // 先輪詢 /api/health，期間顯示喚醒畫面，避免使用者對著白畫面等待或直接離開。
+  // （另有 UptimeRobot 每 10 分鐘定時喚醒，正常情況下這裡會第一次就通過。）
+  async function boot() {
+    const msg = $('bootMsg');
+    const started = Date.now();
+
+    for (let i = 0; ; i++) {
+      try {
+        const r = await fetch(API + '/health', { cache: 'no-store' });
+        if (r.ok) break;
+      } catch (e) { /* 伺服器還沒起來，繼續等 */ }
+
+      const secs = Math.round((Date.now() - started) / 1000);
+      msg.innerHTML = i === 0
+        ? '正在連線伺服器…'
+        : `伺服器喚醒中，約需 30–60 秒（已等待 ${secs} 秒）<br>
+           <span style="font-size:11.5px">此為免費雲端方案，閒置後會自動休眠</span>`;
+      await new Promise(res => setTimeout(res, 2000));
+    }
+
+    $('boot').classList.add('hide');
+    if (token) enterApp();
+  }
+
+  boot();
 </script>
 </body>
 </html>
