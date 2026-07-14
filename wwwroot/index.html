@@ -395,7 +395,13 @@
   </div>
 
 <script>
-  const API = '/api';
+  // 前後端分離：
+  //   ・前端（這個檔案）部署於 GitHub Pages —— 靜態主機，永遠秒開，不會休眠
+  //   ・後端 API 部署於 Render（Docker 容器）
+  // 於 GitHub Pages 載入時，呼叫遠端 API；本機開發時走同源的 /api。
+  const API = location.hostname.endsWith('github.io')
+    ? 'https://project-staffing-system.onrender.com/api'
+    : '/api';
   let token = localStorage.getItem('token');
   let editProjId = null, editStaffId = null;
 
@@ -743,10 +749,14 @@
     if (r.ok) { say('已移除派工', true); loadAll(); $('projDetail').classList.add('hide'); }
   }
 
-  // ── 啟動：先確認後端已醒 ──
-  // Render 免費方案閒置後會休眠，冷啟動需 30~60 秒。
-  // 先輪詢 /api/health，期間顯示喚醒畫面，避免使用者對著白畫面等待或直接離開。
-  // （另有 UptimeRobot 每 10 分鐘定時喚醒，正常情況下這裡會第一次就通過。）
+  // ── 啟動：等待後端 API 就緒 ──
+  //
+  // 前端由 GitHub Pages 提供，永遠是秒開的；但後端在 Render 免費方案上，
+  // 閒置 15 分鐘後會休眠，冷啟動需數十秒。
+  // （已用 GitHub Actions 每 5 分鐘喚醒，正常情況下第一次輪詢就會通過。）
+  //
+  // 此處輪詢 /api/health 直到後端回應，期間顯示進度，
+  // 讓使用者知道系統正在啟動，而不是壞掉了。
   async function boot() {
     const msg = $('bootMsg');
     const started = Date.now();
@@ -755,14 +765,16 @@
       try {
         const r = await fetch(API + '/health', { cache: 'no-store' });
         if (r.ok) break;
-      } catch (e) { /* 伺服器還沒起來，繼續等 */ }
+      } catch (e) { /* 後端還沒起來，繼續等 */ }
 
       const secs = Math.round((Date.now() - started) / 1000);
-      msg.innerHTML = i === 0
-        ? '正在連線伺服器…'
-        : `伺服器喚醒中，約需 30–60 秒（已等待 ${secs} 秒）<br>
-           <span style="font-size:11.5px">此為免費雲端方案，閒置後會自動休眠</span>`;
-      await new Promise(res => setTimeout(res, 2000));
+      msg.innerHTML = secs < 3
+        ? '正在連線後端 API…'
+        : `後端 API 喚醒中（已等待 ${secs} 秒）<br>
+           <span style="font-size:11.5px;line-height:1.7;display:inline-block;margin-top:6px">
+             後端部署於 Render 免費方案，閒置後會自動休眠，<br>冷啟動約需 30–60 秒。
+           </span>`;
+      await new Promise(res => setTimeout(res, 1500));
     }
 
     $('boot').classList.add('hide');

@@ -1,11 +1,15 @@
 name: Keep Render awake
 
-# Render 免費方案在閒置 15 分鐘後會讓服務休眠，下次造訪需等 30~60 秒冷啟動。
-# 每 10 分鐘打一次健康檢查端點，服務就不會休眠，訪客點連結進來即為秒開。
+# Render 免費方案閒置 15 分鐘後會讓服務休眠，下次造訪需等 30~60 秒冷啟動。
+# 訪客（例如面試官）不會有耐心等 —— 因此定時打健康檢查端點，讓它不要睡著。
+#
+# 排程設為每 5 分鐘：GitHub 的 cron 常有 10~20 分鐘的延遲，
+# 若設 10 分鐘，遇上延遲就可能超過 Render 的 15 分鐘休眠門檻。
+# 每次執行內含三段間隔 4 分鐘的 ping，進一步縮小空窗。
 on:
   schedule:
-    - cron: '*/10 * * * *'   # 每 10 分鐘
-  workflow_dispatch:          # 也可在 GitHub 上手動觸發
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
 
 jobs:
   ping:
@@ -13,12 +17,12 @@ jobs:
     steps:
       - name: Ping health endpoint
         run: |
-          for i in 1 2 3; do
-            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 \
-              https://project-staffing-system.onrender.com/api/health) || true
-            echo "第 $i 次：HTTP $code"
-            [ "$code" = "200" ] && exit 0
-            sleep 20
+          URL=https://project-staffing-system.onrender.com/api/health
+          for round in 1 2 3; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 "$URL") || code=000
+            echo "第 $round 次：HTTP $code（$(date -u +%H:%M:%S) UTC）"
+            if [ "$code" != "200" ]; then
+              echo "::warning::服務未回應 200，可能正在冷啟動"
+            fi
+            [ "$round" -lt 3 ] && sleep 240
           done
-          echo "健康檢查未通過"
-          exit 1

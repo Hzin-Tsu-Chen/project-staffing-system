@@ -1,0 +1,42 @@
+name: Deploy frontend to GitHub Pages
+
+# 前後端分離部署：
+#   ・前端（wwwroot）→ GitHub Pages：靜態主機，永遠可用、秒開，不會休眠
+#   ・後端（ASP.NET Core API）→ Render：Docker 容器
+#
+# 這麼做的關鍵理由：Render 免費方案休眠時，連 index.html 都發不出來，
+# 訪客會對著空白分頁等數十秒。把前端放在永遠在線的靜態主機上，
+# 就能立刻呈現介面，並在畫面上顯示後端喚醒進度。
+
+on:
+  push:
+    branches: [main]
+    paths: ['wwwroot/**', '.github/workflows/deploy-frontend.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: wwwroot
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
