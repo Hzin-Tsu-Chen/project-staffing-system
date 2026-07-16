@@ -24,5 +24,7 @@ jobs:
             if [ "$code" != "200" ]; then
               echo "::warning::服務未回應 200，可能正在冷啟動"
             fi
-            [ "$round" -lt 3 ] && sleep 240
+            # 用 if/then/fi 而非「test && sleep」——後者在最後一圈判定為否時會回傳
+            # 非零結束碼，讓 GitHub Actions（預設 set -e）誤判整個步驟失敗。
+            if [ "$round" -lt 3 ]; then sleep 240; fi
           done
